@@ -4,12 +4,6 @@ import time
 def fetch_all_pages(url, context, output_csv="parsed_listings.csv"):
     page = context.new_page()
 
-    page.set_extra_http_headers({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/115.0.0.0 Safari/537.36"
-    })
-
     current_url = url
     page_num = 1
 
