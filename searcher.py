@@ -1,16 +1,6 @@
-from playwright.sync_api import sync_playwright
 import time
 
-def select_autocomplete_option(user_data_dir, headless=False):
-    with sync_playwright() as p:
-        context = p.chromium.launch_persistent_context(
-            user_data_dir=user_data_dir,
-            headless=headless,
-            viewport={"width": 1280, "height": 720},
-            args=[
-                "--window-position=-10000,-10000"
-            ],
-        )
+def select_autocomplete_option(context):
         page = context.new_page()
         page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded")
 
@@ -144,5 +134,5 @@ def select_autocomplete_option(user_data_dir, headless=False):
         final_url = page.url
         print(f"🌐 Redirected to: {final_url}")
 
-        context.close()
+        page.close()
         return final_url
