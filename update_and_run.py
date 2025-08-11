@@ -54,7 +54,7 @@ def is_update_available(compare_full_line=False):
         return version_to_tuple(remote_version) > version_to_tuple(local_version)
 
 
-def download_and_extract_update(zip_url, extract_to="."):
+def download_and_replace_update(zip_url, extract_to="."):
     print("⬇️ Downloading update archive...")
     with urllib.request.urlopen(zip_url) as response:
         data = response.read()
@@ -66,23 +66,48 @@ def download_and_extract_update(zip_url, extract_to="."):
             shutil.rmtree(temp_extract_path)
         z.extractall(temp_extract_path)
 
-        # GitHub ZIP usually contains a root folder; get it
         root_folder = next(os.scandir(temp_extract_path)).path
 
-        # Move files from root_folder to extract_to, overwrite existing
+        # Collect all new files relative paths
+        new_files = []
         for root, dirs, files in os.walk(root_folder):
-            rel_path = os.path.relpath(root, root_folder)
-            target_dir = os.path.join(extract_to, rel_path)
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
             for file in files:
-                src_file = os.path.join(root, file)
-                dst_file = os.path.join(target_dir, file)
-                print(f"➡️ Updating {dst_file}")
-                shutil.move(src_file, dst_file)
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, root_folder)
+                new_files.append(rel_path)
 
-        # Clean up temp folder
+        # Folders or files to exclude from deletion
+        exclude_paths = {LOCAL_VERSION_FILE}
+        exclude_dirs = {'.git', '.svn', '__pycache__', '_temp_update'}
+
+        # Delete files in extract_to NOT in new_files (except excluded)
+        for root, dirs, files in os.walk(extract_to):
+            # Skip excluded dirs by modifying dirs in-place
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+
+            for file in files:
+                rel_path = os.path.relpath(os.path.join(root, file), extract_to)
+                if rel_path not in new_files and rel_path not in exclude_paths:
+                    file_to_delete = os.path.join(root, file)
+                    try:
+                        print(f"🗑️ Deleting obsolete file {file_to_delete}")
+                        os.remove(file_to_delete)
+                    except PermissionError:
+                        print(f"⚠️ Permission denied, cannot delete {file_to_delete}")
+
+
+        # Now move new files from extracted folder to extract_to, overwriting
+        for rel_path in new_files:
+            src_file = os.path.join(root_folder, rel_path)
+            dst_file = os.path.join(extract_to, rel_path)
+            dst_dir = os.path.dirname(dst_file)
+            if not os.path.exists(dst_dir):
+                os.makedirs(dst_dir)
+            print(f"➡️ Updating {dst_file}")
+            shutil.move(src_file, dst_file)
+
         shutil.rmtree(temp_extract_path)
+
         
 if __name__ == "__main__":
     if is_update_available(compare_full_line=False):
@@ -91,7 +116,7 @@ if __name__ == "__main__":
             version, desc = parse_version_line(remote_line)
             print(f"🔔 New version {version} available: {desc}")
 
-            download_and_extract_update(UPDATE_ZIP_URL)
+            download_and_replace_update(UPDATE_ZIP_URL)
             save_local_version_line(remote_line)
             print("✅ Update completed successfully.")
 
