@@ -1,4 +1,4 @@
 @echo off
-echo Running main.py...
-python main.py
+echo Running src/main.py...
+python src/main.py
 pause

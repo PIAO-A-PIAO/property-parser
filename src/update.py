@@ -7,8 +7,8 @@ import sys
 import time
 
 UPDATE_ZIP_URL = "https://github.com/PIAO-A-PIAO/property-parser/archive/refs/heads/main.zip"
-VERSIONS_URL = "https://raw.githubusercontent.com/PIAO-A-PIAO/property-parser/main/versions.txt"
-LOCAL_VERSION_FILE = "versions.txt"
+VERSIONS_URL = "https://raw.githubusercontent.com/PIAO-A-PIAO/property-parser/main/src/versions.txt"
+LOCAL_VERSION_FILE = "../versions.txt"
 
 
 def get_remote_version_info():

@@ -1,4 +1,4 @@
 @echo off
-echo Running update.py...
-python update.py
+echo Running src/update.py...
+python src/update.py
 pause

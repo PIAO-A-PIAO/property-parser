@@ -1,4 +1,4 @@
 @echo off
-echo Running cleanup.py...
-python cleanup.py
+echo Running src/cleanup.py...
+python src/cleanup.py
 pause
