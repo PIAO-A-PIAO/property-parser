@@ -54,7 +54,7 @@ def is_update_available(compare_full_line=False):
         return version_to_tuple(remote_version) > version_to_tuple(local_version)
 
 
-def download_and_replace_update(zip_url, extract_to="."):
+def download_and_replace_update(zip_url, extract_to=".."):
     print("⬇️ Downloading update archive...")
     with urllib.request.urlopen(zip_url) as response:
         data = response.read()
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             version, desc = parse_version_line(remote_line)
             print(f"🔔 New version {version} available: {desc}")
 
-            download_and_replace_update(UPDATE_ZIP_URL)
+            download_and_replace_update(UPDATE_ZIP_URL, "..")
             save_local_version_line(remote_line)
             print("✅ Update completed successfully.")
 
