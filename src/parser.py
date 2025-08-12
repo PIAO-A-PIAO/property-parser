@@ -24,13 +24,18 @@ def parse_articles_from_string(html):
             location = subtitle_tag.text.strip() if subtitle_tag else ""
 
         # Company name
-        company_tag = art.select_one(".company-logos li.company-name p")
-        if company_tag:
-            company = company_tag.text.strip()
+        if "tier2" in art.get("class", []):
+            # For tier2 articles, get company from ul.contacts li title
+            contact_li = art.select_one("ul.contacts li")
+            company = contact_li.get("title", "").strip() if contact_li else ""
         else:
-            # Fallback to li.company-logo img alt text
-            logo_img = art.select_one(".company-logos li.company-logo img")
-            company = logo_img.get("alt", "").strip() if logo_img else ""
+            company_tag = art.select_one(".company-logos li.company-name p")
+            if company_tag:
+                company = company_tag.text.strip()
+            else:
+                # Fallback to li.company-logo img alt text
+                logo_img = art.select_one(".company-logos li.company-logo img")
+                company = logo_img.get("alt", "").strip() if logo_img else ""
 
         # Price, Cap Rate, Size
         data_points = art.select("ul.data-points-2c li")
