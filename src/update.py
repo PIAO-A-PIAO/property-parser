@@ -36,11 +36,6 @@ def get_local_version_line():
         return "0.0.0: (no local version)"
 
 
-def save_local_version_line(version_line):
-    with open(LOCAL_VERSION_FILE, "w") as f:
-        f.write(version_line)
-
-
 def version_to_tuple(v):
     return tuple(int(x) for x in v.split("."))
 
@@ -120,7 +115,6 @@ if __name__ == "__main__":
             print(f"🔔 New version {version} available: {desc}")
 
             download_and_replace_update(UPDATE_ZIP_URL, PROJECT_ROOT)
-            save_local_version_line(remote_line)
             print("✅ Update completed successfully.")
 
             print("🔄 Restarting to apply update...")
