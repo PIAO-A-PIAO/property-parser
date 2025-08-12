@@ -3,4 +3,4 @@
 2.0.1: update company name
 2.0.2: update property size
 2.0.3: integrate tier2 parse
-2.0.4: accurate cap_rate, size parse
+2.0.4: accurate size parse

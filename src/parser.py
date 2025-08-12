@@ -50,8 +50,8 @@ def parse_articles_from_string(html):
                 # Look for price indicator (contains $ or CAD/SF/YR)
                 if "$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price":
                     price = li_text
-                # Look for cap rate info (contains "Built in")
-                elif "Built in" in li_text:
+                # Look for cap rate info (contains "Built in") - only from non-Price elements
+                elif "Built in" in li_text and not ("$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price"):
                     cap_rate = li_text
             
             # Size for tier2: always get from header .text-right h4 a
@@ -68,8 +68,13 @@ def parse_articles_from_string(html):
             cap_rate = "upon request"
             
             # Parse data_points to identify size (contains SF) and cap_rate (contains Built in)
+            # Exclude Price elements when looking for size and cap_rate
             for li in data_points:
                 li_text = li.text.strip()
+                # Skip if this is a Price element
+                if "$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price":
+                    continue
+                    
                 if "SF" in li_text:
                     size = li_text
                 elif "Built in" in li_text:
