@@ -39,35 +39,41 @@ def parse_articles_from_string(html):
 
         # Price, Cap Rate, Size
         if "tier2" in art.get("class", []):
-            # For tier2 articles, extract price, cap_rate, and size from ul.data-points-a
+            # For tier2 articles, extract price and cap_rate from ul.data-points-a
             data_points_a = art.select("ul.data-points-a li")
             
             price = "upon request"
             cap_rate = "upon request"
-            size = "upon request"
             
             for li in data_points_a:
                 li_text = li.text.strip()
                 # Look for price indicator (contains $ or CAD/SF/YR)
                 if "$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price":
                     price = li_text
-                # Look for size (contains SF)
-                elif "SF" in li_text:
-                    size = li_text
                 # Look for cap rate info (contains "Built in")
                 elif "Built in" in li_text:
                     cap_rate = li_text
             
-            # Fallback: try to get size from header .text-right h4 a if not found in data-points-a
-            if not size:
-                size_tag = art.select_one("header .text-right h4 a")
-                size = size_tag.text.strip() if size_tag else "upon request"
+            # Size for tier2: always get from header .text-right h4 a
+            size_tag = art.select_one("header .text-right h4 a")
+            size = size_tag.text.strip() if size_tag else ""
         else:
+            # For non-tier2 articles
             data_points = art.select("ul.data-points-2c li")
+            
             price_element = art.select_one('ul.data-points-2c li[name="Price"]')
             price = price_element.text.strip() if price_element else "upon request"
-            size = data_points[1].text.strip() if len(data_points) > 1 else ""
-            cap_rate = data_points[0].text.strip() if data_points else ""
+            
+            size = "upon request"
+            cap_rate = "upon request"
+            
+            # Parse data_points to identify size (contains SF) and cap_rate (contains Built in)
+            for li in data_points:
+                li_text = li.text.strip()
+                if "SF" in li_text:
+                    size = li_text
+                elif "Built in" in li_text:
+                    cap_rate = li_text
 
         # Image URLs
         images = []
