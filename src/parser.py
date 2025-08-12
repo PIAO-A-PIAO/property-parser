@@ -42,7 +42,14 @@ def parse_articles_from_string(html):
 
         price_element = art.select_one('ul.data-points-2c li[name="Price"]')
         price = price_element.text.strip() if price_element else "upon request"
-        size = data_points[1].text.strip() if len(data_points) > 1 else ""
+        
+        # Size - for tier2, read from header .text-right h4 a
+        if "tier2" in art.get("class", []):
+            size_tag = art.select_one("header .text-right h4 a")
+            size = size_tag.text.strip() if size_tag else ""
+        else:
+            size = data_points[1].text.strip() if len(data_points) > 1 else ""
+            
         cap_rate = data_points[0].text.strip() if data_points else ""
 
         # Image URLs
