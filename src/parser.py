@@ -110,7 +110,7 @@ def parse_articles_from_string(html):
             "Price": price,
             "Cap Rate": cap_rate,
             "Size": size,
-            "Images": "; ".join(images)
+            "Images": " | ".join(images)
         })
 
 
