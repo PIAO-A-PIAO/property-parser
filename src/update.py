@@ -8,7 +8,10 @@ import time
 
 UPDATE_ZIP_URL = "https://github.com/PIAO-A-PIAO/property-parser/archive/refs/heads/main.zip"
 VERSIONS_URL = "https://raw.githubusercontent.com/PIAO-A-PIAO/property-parser/main/versions.txt"
-LOCAL_VERSION_FILE = "../versions.txt"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+LOCAL_VERSION_FILE = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "versions.txt"))
+
 
 
 def get_remote_version_info():
@@ -54,7 +57,7 @@ def is_update_available(compare_full_line=False):
         return version_to_tuple(remote_version) > version_to_tuple(local_version)
 
 
-def download_and_replace_update(zip_url, extract_to=".."):
+def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
     print("⬇️ Downloading update archive...")
     with urllib.request.urlopen(zip_url) as response:
         data = response.read()
@@ -91,7 +94,7 @@ def download_and_replace_update(zip_url, extract_to=".."):
                     file_to_delete = os.path.join(root, file)
                     try:
                         print(f"🗑️ Deleting obsolete file {file_to_delete}")
-                        os.remove(file_to_delete)
+                        # os.remove(file_to_delete)
                     except PermissionError:
                         print(f"⚠️ Permission denied, cannot delete {file_to_delete}")
 
@@ -116,7 +119,7 @@ if __name__ == "__main__":
             version, desc = parse_version_line(remote_line)
             print(f"🔔 New version {version} available: {desc}")
 
-            download_and_replace_update(UPDATE_ZIP_URL, "..")
+            download_and_replace_update(UPDATE_ZIP_URL, PROJECT_ROOT)
             save_local_version_line(remote_line)
             print("✅ Update completed successfully.")
 
