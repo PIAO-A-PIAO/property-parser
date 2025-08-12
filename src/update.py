@@ -31,7 +31,8 @@ def parse_version_line(line):
 def get_local_version_line():
     try:
         with open(LOCAL_VERSION_FILE) as f:
-            return f.read().strip()
+            lines = f.read().strip().splitlines()
+            return lines[-1].strip() if lines else "0.0.0: (no local version)"
     except FileNotFoundError:
         return "0.0.0: (no local version)"
 
@@ -75,7 +76,7 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
                 new_files.append(rel_path)
 
         # Folders or files to exclude from deletion
-        exclude_paths = {LOCAL_VERSION_FILE}
+        exclude_paths = set()
         exclude_dirs = {'.git', '.svn', '__pycache__', '_temp_update'}
 
         # Delete files in extract_to NOT in new_files (except excluded)
