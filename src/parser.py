@@ -52,7 +52,9 @@ def parse_articles_from_string(html):
                     price = li_text
                 # Look for cap rate info (contains "Built in") - only from non-Price elements
                 elif "Built in" in li_text and not ("$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price"):
-                    cap_rate = li_text
+                    # Extract only the part starting with "Built in"
+                    built_in_index = li_text.find("Built in")
+                    cap_rate = li_text[built_in_index:] if built_in_index != -1 else li_text
             
             # Size for tier2: always get from header .text-right h4 a
             size_tag = art.select_one("header .text-right h4 a")
@@ -78,7 +80,9 @@ def parse_articles_from_string(html):
                 if "SF" in li_text:
                     size = li_text
                 elif "Built in" in li_text:
-                    cap_rate = li_text
+                    # Extract only the part starting with "Built in"
+                    built_in_index = li_text.find("Built in")
+                    cap_rate = li_text[built_in_index:] if built_in_index != -1 else li_text
 
         # Image URLs
         images = []
@@ -106,7 +110,7 @@ def parse_articles_from_string(html):
             "Price": price,
             "Cap Rate": cap_rate,
             "Size": size,
-            "Images": ";".join(images)
+            "Images": "; ".join(images)
         })
 
 
