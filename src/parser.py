@@ -38,19 +38,31 @@ def parse_articles_from_string(html):
                 company = logo_img.get("alt", "").strip() if logo_img else ""
 
         # Price, Cap Rate, Size
-        data_points = art.select("ul.data-points-2c li")
-
-        price_element = art.select_one('ul.data-points-2c li[name="Price"]')
-        price = price_element.text.strip() if price_element else "upon request"
-        
-        # Size - for tier2, read from header .text-right h4 a
         if "tier2" in art.get("class", []):
+            # For tier2 articles, extract price and cap_rate from ul.data-points-a
+            data_points_a = art.select("ul.data-points-a li")
+            
+            price = "upon request"
+            cap_rate = ""
+            
+            for li in data_points_a:
+                li_text = li.text.strip()
+                # Look for price indicator (contains $ or CAD/SF/YR)
+                if "$" in li_text or "CAD/SF/YR" in li_text or li.get("name") == "Price":
+                    price = li_text
+                # Look for cap rate (contains % or "cap" in text)
+                elif "%" in li_text or "cap" in li_text.lower():
+                    cap_rate = li_text
+            
+            # Size - for tier2, read from header .text-right h4 a
             size_tag = art.select_one("header .text-right h4 a")
             size = size_tag.text.strip() if size_tag else ""
         else:
+            data_points = art.select("ul.data-points-2c li")
+            price_element = art.select_one('ul.data-points-2c li[name="Price"]')
+            price = price_element.text.strip() if price_element else "upon request"
             size = data_points[1].text.strip() if len(data_points) > 1 else ""
-            
-        cap_rate = data_points[0].text.strip() if data_points else ""
+            cap_rate = data_points[0].text.strip() if data_points else ""
 
         # Image URLs
         images = []
