@@ -94,7 +94,7 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
                     file_to_delete = os.path.join(root, file)
                     try:
                         print(f"🗑️ Deleting obsolete file {file_to_delete}")
-                        # os.remove(file_to_delete)
+                        os.remove(file_to_delete)
                     except PermissionError:
                         print(f"⚠️ Permission denied, cannot delete {file_to_delete}")
 
