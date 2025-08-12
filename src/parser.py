@@ -9,19 +9,28 @@ def parse_articles_from_string(html):
     for art in articles:
         listing_id = art.get("data-id", "").strip()
 
-        # Best a_tag with text (Address + Title)
+        # Best a_tag with text (Address)
         a_tag = art.select_one("header h4 a")
         url = a_tag["href"].strip() if a_tag and a_tag.has_attr("href") else ""
         address = a_tag.text.strip() if a_tag else ""
-        title = a_tag["title"].strip() if a_tag and a_tag.has_attr("title") else ""
 
         # Location (e.g. City + Zip)
-        subtitle_tag = art.select_one("header .subtitle-beta")
-        location = subtitle_tag.text.strip() if subtitle_tag else ""
+        # Check if article has "tier2" in class, if so get location from header h6 a
+        if "tier2" in art.get("class", []):
+            location_tag = art.select_one("header h6 a")
+            location = location_tag.text.strip() if location_tag else ""
+        else:
+            subtitle_tag = art.select_one("header .subtitle-beta")
+            location = subtitle_tag.text.strip() if subtitle_tag else ""
 
         # Company name
         company_tag = art.select_one(".company-logos li.company-name p")
-        company = company_tag.text.strip() if company_tag else ""
+        if company_tag:
+            company = company_tag.text.strip()
+        else:
+            # Fallback to li.company-logo img alt text
+            logo_img = art.select_one(".company-logos li.company-logo img")
+            company = logo_img.get("alt", "").strip() if logo_img else ""
 
         # Price, Cap Rate, Size
         data_points = art.select("ul.data-points-2c li")
@@ -51,7 +60,6 @@ def parse_articles_from_string(html):
         listings.append({
             "Listing ID": listing_id,
             "URL": url,
-            "Title": title,
             "Address": address,
             "Location": location,
             "Company": company,
@@ -73,7 +81,7 @@ def extract_next_page_url(html):
 
 def append_to_csv(listings, output_csv, append=True):
     mode = "a" if append else "w"
-    keys = ["Listing ID", "URL", "Title", "Address", "Location", "Company", "Price", "Cap Rate", "Size", "Images"]
+    keys = ["Listing ID", "URL", "Address", "Location", "Company", "Price", "Cap Rate", "Size", "Images"]
     with open(output_csv, mode, newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=keys)
         if not append:
