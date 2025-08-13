@@ -41,6 +41,10 @@ def fetch_all_pages(url, context, output_csv="parsed_listings.csv"):
 
         next_url = extract_next_page_url(response_html)
         if next_url:
+            # Extract the ?sk= parameter from current URL and append to next URL
+            if "?sk=" in current_url:
+                sk_param = current_url[current_url.find("?sk="):]
+                next_url = next_url + sk_param
             current_url = next_url
             page_num += 1
         else:

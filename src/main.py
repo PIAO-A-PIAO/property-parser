@@ -50,7 +50,7 @@ if __name__ == "__main__":
                 browser = p.chromium.launch(
                     executable_path=browser_executable,
                     headless=False,
-                    args=["--window-position=-10000,-10000"],
+                    # args=["--window-position=-10000,-10000"],
                 )
         else:
             print("⬇️ Launching default Chromium from Playwright...")
@@ -62,9 +62,16 @@ if __name__ == "__main__":
         context = browser.new_context(
             viewport={"width": 1280, "height": 720},
             extra_http_headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                              "AppleWebKit/537.36 (KHTML, like Gecko) "
-                              "Chrome/115.0.0.0 Safari/537.36"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Cache-Control": "max-age=0"
             }
         )
 

@@ -1,8 +1,15 @@
 import time
+import random
 
 def select_autocomplete_option(context):
         page = context.new_page()
         page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded")
+        
+        # Simulate manual refresh with F5
+        time.sleep(random.uniform(0.5, 1))
+        page.evaluate("window.location.reload(true)")
+        page.wait_for_load_state("domcontentloaded")        
+        time.sleep(random.uniform(0.5, 1))
 
         #####################
         ### 1. SALE TYPE ###
@@ -10,8 +17,8 @@ def select_autocomplete_option(context):
 
         sale_type_options = {
             0: {"label": "For Lease", "selector": "li.long-name:has-text('For Lease')"},
-            1: {"label": "For Sale", "selector": "li.long-name:has-text('For Sale')"},
-            2: {"label": "Businesses For Sale", "selector": "li.long-name:has-text('Businesses For Sale')"}
+            1: {"label": "For Sale", "selector": "li.long-name[ng-click=\"selectSearchType('forSale')\"]"},
+            # 2: {"label": "Businesses For Sale", "selector": "li.long-name:has-text('Businesses For Sale')"}
         }
 
         print("\n📌 What are you looking for?")
@@ -20,20 +27,20 @@ def select_autocomplete_option(context):
 
         while True:
             try:
-                choice = int(input("👉 Select by number: "))
-                if choice in sale_type_options:
+                sale_type_choice = int(input("👉 Select by number: "))
+                if sale_type_choice in sale_type_options:
                     # Wait for sale type option to be visible and click it
-                    locator = page.locator(sale_type_options[choice]["selector"])
+                    locator = page.locator(sale_type_options[sale_type_choice]["selector"])
                     locator.wait_for(state="visible", timeout=5000)
                     locator.click()
-                    print(f"✅ Selected: {sale_type_options[choice]['label']}")
+                    print(f"✅ Selected: {sale_type_options[sale_type_choice]['label']}")
                     break
                 else:
                     print("❌ Invalid number. Try again.")
             except ValueError:
                 print("❌ Please enter a number.")
 
-        time.sleep(1)
+        time.sleep(random.uniform(0.5, 1))
 
         ###########################
         ### 2. PROPERTY TYPE ###
@@ -73,7 +80,7 @@ def select_autocomplete_option(context):
             except ValueError:
                 print("❌ Please enter a number.")
 
-        time.sleep(1)
+        time.sleep(random.uniform(0.5, 1))
 
         #############################
         ### 3. LOCATION AUTOCOMPLETE ###
@@ -129,7 +136,157 @@ def select_autocomplete_option(context):
             page.wait_for_load_state("load")
 
         # Extra delay for dynamic content to settle
-        time.sleep(2)
+        time.sleep(random.uniform(0.5, 1))
+
+        #############################
+        ### 4. PRICE FILTER ###
+        #############################
+        
+        # Click the appropriate dropdown button based on sale type choice
+        if sale_type_choice == 0:  # For Lease
+            dropdown_selector = "div.search-bar-for-lease-filters div.drop-down.lease-rate.custom"
+            form_name = "frmSearchBarLeaseRate"
+        else:  # For Sale
+            dropdown_selector = "div.search-bar-for-sale-filters div.drop-down.sale-price.custom"
+            form_name = "frmSearchBarPriceRange"
+            
+        # Click the dropdown button to make the form visible
+        dropdown_button = page.locator(dropdown_selector)
+        try:
+            dropdown_button.wait_for(state="visible", timeout=10000)
+            dropdown_button.click()
+            print("✅ Clicked dropdown button - form should now be visible")
+        except Exception as e:
+            print(f"⚠️ Could not click dropdown button: {e}")
+            
+        price_form = page.locator(f'form[name="{form_name}"]')
+        try:
+            price_form.wait_for(state="visible", timeout=10000)
+            print("✅ Found price range form")
+            
+            # Get all pills that are not hidden
+            pills = price_form.locator('div.pill:not(.ng-hide)')
+            pill_count = pills.count()
+            
+            print(f"\n💊 Found {pill_count} price range options:")
+            pill_options = {}
+            
+            for i in range(pill_count):
+                pill = pills.nth(i)
+                try:
+                    label_element = pill.locator('label')
+                    label_text = label_element.inner_text().strip()
+                    pill_options[i] = {"text": label_text, "element": label_element}
+                    print(f"{i}: {label_text}")
+                except Exception as e:
+                    print(f"⚠️ Error reading pill {i}: {e}")
+            
+            # Ask user to choose a price range option
+            while True:
+                try:
+                    choice = int(input("👉 Select price range type by number: "))
+                    if choice in pill_options:
+                        pill_options[choice]["element"].click()
+                        print(f"✅ Selected price range type: {pill_options[choice]['text']}")
+                        
+                        # Ask for min and max values
+                        min_value = input("👉 Enter minimum value (or press Enter to skip): ").strip()
+                        max_value = input("👉 Enter maximum value (or press Enter to skip): ").strip()
+                        
+                        # Find and fill the text inputs
+                        try:
+                            if min_value:
+                                min_input = price_form.locator('input[type="text"]').first
+                                min_input.clear()
+                                min_input.type(min_value)
+                                
+                            if max_value:
+                                max_input = price_form.locator('input[type="text"]').nth(1)
+                                max_input.clear()
+                                max_input.type(max_value)
+                        except Exception as e:
+                            print(f"⚠️ Error entering values: {e}")
+                        
+                        # Wait for page to redirect after entering values
+                        previous_url = page.url
+                        try:
+                            page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                            print("✅ Page redirected after price filter selection")
+                        except Exception:
+                            print("⚠️ URL did not change after filter selection, waiting for load event instead.")
+                            page.wait_for_load_state("load")
+                        
+                        time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
+                        
+                        break
+                    else:
+                        print("❌ Invalid number. Try again.")
+                except ValueError:
+                    print("❌ Please enter a number.")
+            
+        except Exception as e:
+            print(f"⚠️ Error with price range form: {e}")
+
+        #############################
+        ### 5. SPACE AVAILABLE FILTER ###
+        #############################
+        
+        # Click the appropriate space dropdown based on sale type choice
+        if sale_type_choice == 0:  # For Lease
+            space_dropdown_selector = "div.search-bar-for-lease-filters div.drop-down.space-available.custom"
+            space_form_name = "frmSearchBarSpaceAvailable"
+        else:  # For Sale
+            space_dropdown_selector = "div.search-bar-for-sale-filters div.drop-down.building-size.custom"
+            space_form_name = "frmSearchBarBuildingSize"
+            
+        space_dropdown = page.locator(space_dropdown_selector)
+        try:
+            space_dropdown.wait_for(state="visible", timeout=10000)
+            space_dropdown.click()
+            print("✅ Clicked space available dropdown - form should now be visible")
+            
+            # Ask for min and max space values
+            min_space = input("👉 Enter minimum space (or press Enter to skip): ").strip()
+            max_space = input("👉 Enter maximum space (or press Enter to skip): ").strip()
+            
+            space_form = page.locator(f'form[name="{space_form_name}"]')
+            try:
+                space_form.wait_for(state="attached", timeout=5000)
+                
+                # Find text inputs with "SF" in placeholder
+                sf_inputs = space_form.locator('input[type="text"][placeholder*="SF"]')
+                sf_count = sf_inputs.count()
+                print(f"Found {sf_count} SF-related inputs")
+                
+                if min_space and sf_count > 0:
+                    min_input = sf_inputs.first
+                    min_input.fill(min_space, force=True)
+                    print(f"✅ Entered minimum space: {min_space}")
+                    
+                if max_space and sf_count > 1:
+                    max_input = sf_inputs.nth(1)
+                    max_input.fill(max_space, force=True)
+                    print(f"✅ Entered maximum space: {max_space}")
+                elif max_space and sf_count == 1:
+                    print("⚠️ Only found one SF input, cannot set maximum")
+                    
+                # Wait for page to redirect after entering space values
+                if min_space or max_space:
+                    previous_url = page.url
+                    try:
+                        page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                        print("✅ Page redirected after space filter selection")
+                    except Exception:
+                        print("⚠️ URL did not change after space filter selection, waiting for load event instead.")
+                        page.wait_for_load_state("load")
+                    
+                    time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
+                    
+            except Exception as e:
+                print(f"⚠️ Error with space form: {e}")
+                
+        except Exception as e:
+            print(f"⚠️ Could not click space available dropdown: {e}")
 
         final_url = page.url
         print(f"🌐 Redirected to: {final_url}")

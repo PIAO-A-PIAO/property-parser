@@ -5,3 +5,4 @@
 2.0.3: integrate tier2 parse
 2.0.4: accurate size parse
 2.0.5: cap rate + image format
+2.0.6: price and size filter
