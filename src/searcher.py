@@ -21,6 +21,11 @@ def select_autocomplete_option(context):
             # 2: {"label": "Businesses For Sale", "selector": "li.long-name:has-text('Businesses For Sale')"}
         }
 
+        try:
+            page.wait_for_selector("li.long-name", timeout=10000)
+        except:
+            print("⚠️ Page elements may not be fully loaded")
+
         print("\n📌 What are you looking for?")
         for idx, val in sale_type_options.items():
             print(f"{idx}: {val['label']}")
