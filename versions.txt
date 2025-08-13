@@ -6,3 +6,4 @@
 2.0.4: accurate size parse
 2.0.5: cap rate + image format
 2.0.6: price and size filter
+2.0.7: trim unit and unwanted words

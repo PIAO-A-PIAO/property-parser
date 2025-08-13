@@ -163,11 +163,7 @@ def parse_articles_from_string(html):
             "Company": company,
             "Price (CAD/SF/Year)": price,
             "Cap Rate": cap_rate,
-<<<<<<< HEAD
-            "Size": size,
-=======
             "Size (SF)": size,
->>>>>>> origin/dev
             "Images": " | ".join(images)
         })
 
