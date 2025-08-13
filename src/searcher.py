@@ -1,5 +1,6 @@
 import time
 import random
+from datetime import datetime
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -24,7 +25,8 @@ def select_autocomplete_option(context):
         try:
             page.wait_for_selector("li.long-name", timeout=10000)
         except:
-            print("⚠️ Page elements may not be fully loaded")
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            print(f"⚠️ Page elements may not be fully loaded - {timestamp}")
 
         print("\n📌 What are you looking for?")
         for idx, val in sale_type_options.items():
