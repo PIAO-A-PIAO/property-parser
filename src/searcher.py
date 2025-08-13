@@ -85,7 +85,7 @@ def select_autocomplete_option(context):
         #############################
         ### 3. LOCATION AUTOCOMPLETE ###
         #############################
-        keyword = input("Enter a location keyword (e.g., Toronto, Warehouse, etc.): ")
+        keyword = input("\n🗺️ Enter a location keyword (e.g., Toronto, Warehouse, etc.): ")
         location_input = page.locator("input[name='geography']:visible")
         location_input.click()
         location_input.type(keyword, delay=100)
@@ -111,7 +111,7 @@ def select_autocomplete_option(context):
             except Exception as e:
                 print(f"⚠️ Error reading item {i}: {e}")
 
-        print("\n📍 Location Suggestions:")
+        print("📍 Location Suggestions:")
         for idx, val in options.items():
             print(f"{idx}: {val['text']}")
 
@@ -155,20 +155,18 @@ def select_autocomplete_option(context):
         try:
             dropdown_button.wait_for(state="visible", timeout=10000)
             dropdown_button.click()
-            print("✅ Clicked dropdown button - form should now be visible")
         except Exception as e:
             print(f"⚠️ Could not click dropdown button: {e}")
             
         price_form = page.locator(f'form[name="{form_name}"]')
         try:
             price_form.wait_for(state="visible", timeout=10000)
-            print("✅ Found price range form")
             
             # Get all pills that are not hidden
             pills = price_form.locator('div.pill:not(.ng-hide)')
             pill_count = pills.count()
             
-            print(f"\n💊 Found {pill_count} price range options:")
+            print(f"\n🪙 Found {pill_count} price range options:")
             pill_options = {}
             
             for i in range(pill_count):
@@ -184,7 +182,11 @@ def select_autocomplete_option(context):
             # Ask user to choose a price range option
             while True:
                 try:
-                    choice = int(input("👉 Select price range type by number: "))
+                    user_input = input("👉 Select price range type by number (or press Enter to skip): ")
+                    if user_input.strip() == "":
+                        print("⏭️ Skipping price range selection...")
+                        break
+                    choice = int(user_input)
                     if choice in pill_options:
                         pill_options[choice]["element"].click()
                         print(f"✅ Selected price range type: {pill_options[choice]['text']}")
@@ -243,8 +245,8 @@ def select_autocomplete_option(context):
         try:
             space_dropdown.wait_for(state="visible", timeout=10000)
             space_dropdown.click()
-            print("✅ Clicked space available dropdown - form should now be visible")
-            
+
+            print("\n🏢 Filter by size: ")                
             # Ask for min and max space values
             min_space = input("👉 Enter minimum space (or press Enter to skip): ").strip()
             max_space = input("👉 Enter maximum space (or press Enter to skip): ").strip()
@@ -256,17 +258,14 @@ def select_autocomplete_option(context):
                 # Find text inputs with "SF" in placeholder
                 sf_inputs = space_form.locator('input[type="text"][placeholder*="SF"]')
                 sf_count = sf_inputs.count()
-                print(f"Found {sf_count} SF-related inputs")
                 
                 if min_space and sf_count > 0:
                     min_input = sf_inputs.first
                     min_input.fill(min_space, force=True)
-                    print(f"✅ Entered minimum space: {min_space}")
                     
                 if max_space and sf_count > 1:
                     max_input = sf_inputs.nth(1)
                     max_input.fill(max_space, force=True)
-                    print(f"✅ Entered maximum space: {max_space}")
                 elif max_space and sf_count == 1:
                     print("⚠️ Only found one SF input, cannot set maximum")
                     
@@ -275,13 +274,12 @@ def select_autocomplete_option(context):
                     previous_url = page.url
                     try:
                         page.wait_for_url(lambda url: url != previous_url, timeout=10000)
-                        print("✅ Page redirected after space filter selection")
                     except Exception:
                         print("⚠️ URL did not change after space filter selection, waiting for load event instead.")
                         page.wait_for_load_state("load")
                     
                     time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
-                    
+                
             except Exception as e:
                 print(f"⚠️ Error with space form: {e}")
                 
@@ -289,7 +287,7 @@ def select_autocomplete_option(context):
             print(f"⚠️ Could not click space available dropdown: {e}")
 
         final_url = page.url
-        print(f"🌐 Redirected to: {final_url}")
+        print(f"\n🌐 Redirected to: {final_url}")
 
         page.close()
         return final_url
