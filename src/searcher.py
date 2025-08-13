@@ -21,7 +21,6 @@ def select_autocomplete_option(context):
             # 2: {"label": "Businesses For Sale", "selector": "li.long-name:has-text('Businesses For Sale')"}
         }
 
-        # Wait for the sale type options to be fully loaded before showing UI
         try:
             page.wait_for_selector("li.long-name", timeout=10000)
         except:
