@@ -8,3 +8,4 @@
 2.0.6: price and size filter
 2.0.7: trim unit and unwanted words
 2.1.0: append timestamp after filename
+2.1.1: timestamp...
