@@ -8,8 +8,8 @@ def select_autocomplete_option(context):
         # Simulate manual refresh with F5
         time.sleep(random.uniform(0.5, 1))
         page.evaluate("window.location.reload(true)")
-        page.wait_for_load_state("domcontentloaded")        
-        time.sleep(random.uniform(0.5, 1))
+        page.wait_for_load_state("load")        
+        time.sleep(random.uniform(1.0, 2.0))
 
         #####################
         ### 1. SALE TYPE ###
@@ -20,6 +20,12 @@ def select_autocomplete_option(context):
             1: {"label": "For Sale", "selector": "li.long-name[ng-click=\"selectSearchType('forSale')\"]"},
             # 2: {"label": "Businesses For Sale", "selector": "li.long-name:has-text('Businesses For Sale')"}
         }
+
+        # Wait for the sale type options to be fully loaded before showing UI
+        try:
+            page.wait_for_selector("li.long-name", timeout=10000)
+        except:
+            print("⚠️ Page elements may not be fully loaded")
 
         print("\n📌 What are you looking for?")
         for idx, val in sale_type_options.items():
