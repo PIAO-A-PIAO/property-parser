@@ -220,6 +220,76 @@ class PropertySearchGUI:
         self.root.mainloop()
         return self.selected_choice
     
+    def show_price_range_selection(self, price_options):
+        """Show price range options selection in the same window"""
+        self.clear_content()
+        self.root.title("Property Search - Price Range")
+        self.root.geometry("450x400")
+        
+        # Title label
+        title_label = tk.Label(self.main_frame, text="Select Price Range Type", 
+                              font=("Arial", 14, "bold"), pady=10)
+        title_label.pack()
+        
+        # Instruction label
+        instruction_label = tk.Label(self.main_frame, 
+                                   text="Choose a price range option or skip to continue:", 
+                                   font=("Arial", 11), pady=10)
+        instruction_label.pack()
+        
+        # Buttons frame - pack first so it stays at bottom
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(side="bottom", pady=15, fill="x")
+        
+        # Center the buttons
+        button_container = tk.Frame(button_frame)
+        button_container.pack()
+        
+        # Create scrollable frame for radio buttons
+        canvas_frame = tk.Frame(self.main_frame)
+        canvas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+        
+        canvas = tk.Canvas(canvas_frame)
+        scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Radio buttons for each price option
+        for idx, option in price_options.items():
+            radio = tk.Radiobutton(scrollable_frame, text=option['text'], 
+                                  variable=self.selection_var, value=idx,
+                                  font=("Arial", 11), pady=3, anchor="w")
+            radio.pack(fill="x", padx=20)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Add buttons to the button container
+        confirm_btn = tk.Button(button_container, text="Select & Continue", command=self._on_confirm,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=15, pady=8)
+        confirm_btn.pack(side="left", padx=8)
+        
+        skip_btn = tk.Button(button_container, text="Skip", command=self._on_skip,
+                            bg="#28a745", fg="white", font=("Arial", 10),
+                            padx=20, pady=8)
+        skip_btn.pack(side="left", padx=8)
+        
+        cancel_btn = tk.Button(button_container, text="Cancel", command=self._on_cancel,
+                              bg="#6c757d", fg="white", font=("Arial", 10),
+                              padx=15, pady=8)
+        cancel_btn.pack(side="left", padx=8)
+        
+        self.root.mainloop()
+        return self.selected_choice
+    
     def _add_buttons(self):
         """Add Continue and Cancel buttons"""
         button_frame = tk.Frame(self.main_frame)
@@ -245,6 +315,47 @@ class PropertySearchGUI:
     def _on_cancel(self):
         self.selected_choice = None
         self.root.quit()
+    
+    def _on_skip(self):
+        self.selected_choice = "skip"
+        self.root.quit()
+    
+    def show_loading_message(self, message="Loading..."):
+        """Show a loading message in the same window"""
+        self.clear_content()
+        self.root.title("Property Search - Loading")
+        self.root.geometry("400x200")
+        
+        # Loading label
+        loading_label = tk.Label(self.main_frame, text=message, 
+                               font=("Arial", 14), pady=40)
+        loading_label.pack()
+        
+        # Progress indicator (simple dots animation)
+        self.dots_label = tk.Label(self.main_frame, text="...", 
+                                 font=("Arial", 16), pady=10)
+        self.dots_label.pack()
+        
+        # Force update to show the loading message immediately
+        self.root.update()
+        self._animate_dots()
+    
+    def _animate_dots(self):
+        """Animate loading dots"""
+        current_text = self.dots_label.cget("text")
+        if len(current_text) >= 6:  # Reset after "......"
+            new_text = "."
+        else:
+            new_text = current_text + "."
+        
+        try:
+            self.dots_label.config(text=new_text)
+            self.root.update()
+            # Schedule next animation frame
+            self.root.after(500, self._animate_dots)
+        except tk.TclError:
+            # Window was destroyed, stop animation
+            pass
     
     def close(self):
         """Close the GUI window"""
@@ -279,6 +390,16 @@ def show_location_options_dialog(location_options):
     """Show a GUI dialog for location options selection using persistent window"""
     gui = get_gui_instance()
     return gui.show_location_options_selection(location_options)
+
+def show_price_range_dialog(price_options):
+    """Show a GUI dialog for price range selection using persistent window"""
+    gui = get_gui_instance()
+    return gui.show_price_range_selection(price_options)
+
+def show_loading_message(message="Loading..."):
+    """Show a loading message using persistent window"""
+    gui = get_gui_instance()
+    gui.show_loading_message(message)
 
 def close_gui():
     """Close the persistent GUI window"""
