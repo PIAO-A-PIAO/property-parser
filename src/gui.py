@@ -5,7 +5,7 @@ class PropertySearchGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Property Search")
-        self.root.geometry("450x400")
+        self.root.geometry("450x500")
         self.root.resizable(False, False)
         self.root.eval('tk::PlaceWindow . center')
         self.root.transient()
@@ -15,9 +15,32 @@ class PropertySearchGUI:
         self.selected_choice = None
         self.selection_var = tk.IntVar(value=-1)
         
-        # Create main container
-        self.main_frame = tk.Frame(self.root)
+        # Create main container with log section
+        self.content_frame = tk.Frame(self.root)
+        self.content_frame.pack(fill="both", expand=True, padx=10, pady=(10, 0))
+        
+        # Main content area
+        self.main_frame = tk.Frame(self.content_frame)
         self.main_frame.pack(fill="both", expand=True)
+        
+        # Log section at bottom
+        self.log_frame = tk.Frame(self.content_frame)
+        self.log_frame.pack(fill="x", side="bottom", pady=(10, 10))
+        
+        log_title = tk.Label(self.log_frame, text="Activity Log:", font=("Arial", 9, "bold"))
+        log_title.pack(anchor="w")
+        
+        # Create scrollable log area
+        log_scroll_frame = tk.Frame(self.log_frame)
+        log_scroll_frame.pack(fill="x")
+        
+        self.log_text = tk.Text(log_scroll_frame, height=4, font=("Arial", 8), 
+                               bg="#f8f9fa", fg="#333", state="disabled", wrap="word")
+        log_scrollbar = tk.Scrollbar(log_scroll_frame, orient="vertical", command=self.log_text.yview)
+        self.log_text.configure(yscrollcommand=log_scrollbar.set)
+        
+        self.log_text.pack(side="left", fill="both", expand=True)
+        log_scrollbar.pack(side="right", fill="y")
         
     def clear_content(self):
         """Clear all content from the main frame"""
@@ -25,6 +48,16 @@ class PropertySearchGUI:
             widget.destroy()
         self.selection_var.set(-1)
         self.selected_choice = None
+    
+    def log_message(self, message):
+        """Add a message to the log area"""
+        self.log_text.config(state="normal")
+        self.log_text.insert(tk.END, message + "\n")
+        self.log_text.config(state="disabled")
+        # Auto-scroll to bottom
+        self.log_text.see(tk.END)
+        # Update GUI immediately
+        self.root.update_idletasks()
     
     def show_sale_type_selection(self, sale_type_options):
         """Show sale type selection in the same window"""
@@ -560,6 +593,11 @@ def show_loading_message(message="Loading..."):
     """Show a loading message using persistent window"""
     gui = get_gui_instance()
     gui.show_loading_message(message)
+
+def log_message(message):
+    """Log a message to the GUI log section"""
+    gui = get_gui_instance()
+    gui.log_message(message)
 
 def close_gui():
     """Close the persistent GUI window"""

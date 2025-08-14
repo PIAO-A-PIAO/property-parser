@@ -4,6 +4,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 from fetcher import fetch_all_pages
 from searcher import select_autocomplete_option
+from gui import log_message
 
 # === Common system paths for various browsers ===
 BROWSER_PATHS = {
@@ -16,18 +17,18 @@ BROWSER_PATHS = {
 def find_installed_browser():
     for name, path in BROWSER_PATHS.items():
         if Path(path).is_file():
-            print(f"✅ Found installed browser: {name} at {path}")
+            log_message(f"✅ Found installed browser: {name} at {path}")
             return name, path
-    print("⚠️ No mainstream browser found.")
+    log_message("⚠️ No mainstream browser found.")
     return None, None
 
 def install_playwright_browsers():
-    print("⬇️ Running 'playwright install' to download browsers...")
+    log_message("⬇️ Running 'playwright install' to download browsers...")
     try:
         subprocess.check_call([sys.executable, "-m", "playwright", "install"])
-        print("✅ Playwright browsers installed successfully.")
+        log_message("✅ Playwright browsers installed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install browsers: {e}")
+        log_message(f"❌ Failed to install browsers: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     with sync_playwright() as p:
         if browser_executable:
-            print(f"Launching installed browser '{browser_name}' at: {browser_executable}")
+            log_message(f"Launching installed browser '{browser_name}' at: {browser_executable}")
             if browser_name == "firefox":
                 browser = p.firefox.launch(
                     executable_path=browser_executable,
@@ -53,7 +54,7 @@ if __name__ == "__main__":
                     # args=["--window-position=-10000,-10000"],
                 )
         else:
-            print("⬇️ Launching default Chromium from Playwright...")
+            log_message("⬇️ Launching default Chromium from Playwright...")
             browser = p.chromium.launch(
                 headless=False,
                 args=["--window-position=-10000,-10000"],
@@ -76,7 +77,7 @@ if __name__ == "__main__":
         )
 
         final_url = select_autocomplete_option(context)
-        print(f"\n🔗 Final search results URL: {final_url}")
+        log_message(f"🔗 Final search results URL: {final_url}")
 
         if final_url:
             fetch_all_pages(final_url, context)

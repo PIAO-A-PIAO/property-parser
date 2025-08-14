@@ -1,6 +1,6 @@
 import time
 import random
-from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_price_input_dialog, show_space_input_dialog, show_loading_message, close_gui
+from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_price_input_dialog, show_space_input_dialog, show_loading_message, log_message, close_gui
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -25,13 +25,13 @@ def select_autocomplete_option(context):
         try:
             page.wait_for_selector("li.long-name", timeout=10000)
         except:
-            print("⚠️ Page elements may not be fully loaded")
+            log_message("⚠️ Page elements may not be fully loaded")
 
         # Show GUI dialog for sale type selection
         sale_type_choice = show_sale_type_dialog(sale_type_options)
         
         if sale_type_choice is None:
-            print("❌ Selection cancelled by user")
+            log_message("❌ Selection cancelled by user")
             context.close()
             return None
             
@@ -39,7 +39,7 @@ def select_autocomplete_option(context):
         locator = page.locator(sale_type_options[sale_type_choice]["selector"])
         locator.wait_for(state="visible", timeout=5000)
         locator.click()
-        print(f"✅ Selected: {sale_type_options[sale_type_choice]['label']}")
+        log_message(f"✅ Selected: {sale_type_options[sale_type_choice]['label']}")
 
         time.sleep(random.uniform(0.5, 1))
 
@@ -63,22 +63,20 @@ def select_autocomplete_option(context):
                     label = tile.inner_text().strip()
                 prop_options[i] = {"text": label, "element": tile}
             except Exception as e:
-                print(f"⚠️ Error reading property type {i}: {e}")
+                log_message(f"⚠️ Error reading property type {i}: {e}")
 
-        print("\n🏢 Property Types:")
-        for idx, val in prop_options.items():
-            print(f"{idx}: {val['text']}")
+        log_message("🏢 Property Types retrieved")
 
         # Show GUI dialog for property type selection
         selected_prop = show_property_type_dialog(prop_options)
         
         if selected_prop is None:
-            print("❌ Property type selection cancelled by user")
+            log_message("❌ Property type selection cancelled by user")
             context.close()
             return None
             
         prop_options[selected_prop]["element"].click()
-        print(f"✅ Selected Property Type: {prop_options[selected_prop]['text']}")
+        log_message(f"✅ Selected Property Type: {prop_options[selected_prop]['text']}")
 
         time.sleep(random.uniform(0.5, 1))
 
@@ -90,11 +88,11 @@ def select_autocomplete_option(context):
         keyword = show_location_input_dialog()
         
         if keyword is None:
-            print("❌ Location input cancelled by user")
+            log_message("❌ Location input cancelled by user")
             context.close()
             return None
             
-        print(f"\n🗺️ Using location keyword: {keyword}")
+        log_message(f"🗺️ Using location keyword: {keyword}")
         location_input = page.locator("input[name='geography']:visible")
         location_input.click()
         location_input.type(keyword, delay=100)
@@ -103,7 +101,7 @@ def select_autocomplete_option(context):
         try:
             popup.wait_for(state="visible", timeout=10000)
         except:
-            print("❌ Autocomplete popup did not appear.")
+            log_message("❌ Autocomplete popup did not appear.")
             context.close()
             return None
 
@@ -118,29 +116,27 @@ def select_autocomplete_option(context):
                 text = a.inner_text().strip()
                 options[i] = {"text": text, "element": li}
             except Exception as e:
-                print(f"⚠️ Error reading item {i}: {e}")
+                log_message(f"⚠️ Error reading item {i}: {e}")
 
-        print("📍 Location Suggestions:")
-        for idx, val in options.items():
-            print(f"{idx}: {val['text']}")
+        log_message("📍 Location Suggestions retrieved")
 
         # Show GUI dialog for location options selection
         selected_location = show_location_options_dialog(options)
         
         if selected_location is None:
-            print("❌ Location selection cancelled by user")
+            log_message("❌ Location selection cancelled by user")
             context.close()
             return None
             
         previous_url = page.url
         options[selected_location]["element"].click()
-        print(f"✅ Selected: {options[selected_location]['text']}")
+        log_message(f"✅ Selected: {options[selected_location]['text']}")
 
         # Wait for URL to change after selection (up to 10 seconds)
         try:
             page.wait_for_url(lambda url: url != previous_url, timeout=10000)
         except Exception:
-            print("⚠️ URL did not change after location selection, waiting for load event instead.")
+            log_message("⚠️ URL did not change after location selection, waiting for load event instead.")
             page.wait_for_load_state("load")
 
         # Extra delay for dynamic content to settle
@@ -164,7 +160,7 @@ def select_autocomplete_option(context):
             dropdown_button.wait_for(state="visible", timeout=10000)
             dropdown_button.click()
         except Exception as e:
-            print(f"⚠️ Could not click dropdown button: {e}")
+            log_message(f"⚠️ Could not click dropdown button: {e}")
             
         price_form = page.locator(f'form[name="{form_name}"]')
         try:
@@ -174,7 +170,7 @@ def select_autocomplete_option(context):
             pills = price_form.locator('div.pill:not(.ng-hide)')
             pill_count = pills.count()
             
-            print(f"\n🪙 Found {pill_count} price range options:")
+            log_message(f"🪙 Found {pill_count} price range options")
             pill_options = {}
             
             for i in range(pill_count):
@@ -183,34 +179,34 @@ def select_autocomplete_option(context):
                     label_element = pill.locator('label')
                     label_text = label_element.inner_text().strip()
                     pill_options[i] = {"text": label_text, "element": label_element}
-                    print(f"{i}: {label_text}")
+                    pass
                 except Exception as e:
-                    print(f"⚠️ Error reading pill {i}: {e}")
+                    log_message(f"⚠️ Error reading pill {i}: {e}")
             
             # Show GUI dialog for price range selection
             selected_price = show_price_range_dialog(pill_options)
             
             if selected_price is None:
-                print("❌ Price range selection cancelled by user")
+                log_message("❌ Price range selection cancelled by user")
                 context.close()
                 return None
             elif selected_price == "skip":
-                print("⏭️ Skipping price range selection...")
+                log_message("⏭️ Skipping price range selection...")
                 # Skip directly to step 5 (space filter)
             else:
                 pill_options[selected_price]["element"].click()
-                print(f"✅ Selected price range type: {pill_options[selected_price]['text']}")
+                log_message(f"✅ Selected price range type: {pill_options[selected_price]['text']}")
                 
                 # Show price input GUI with the selected unit
                 unit_label = pill_options[selected_price]['text']
                 price_input = show_price_input_dialog(unit_label)
                 
                 if price_input is None:
-                    print("❌ Price input cancelled by user")
+                    log_message("❌ Price input cancelled by user")
                     context.close()
                     return None
                 elif price_input == "skip":
-                    print("⏭️ Skipping price value entry...")
+                    log_message("⏭️ Skipping price value entry...")
                 else:
                     min_value = price_input['min']
                     max_value = price_input['max']
@@ -230,21 +226,21 @@ def select_autocomplete_option(context):
                         if min_value or max_value:
                             show_loading_message("Applying price filter...")
                     except Exception as e:
-                        print(f"⚠️ Error entering values: {e}")
+                        log_message(f"⚠️ Error entering values: {e}")
                     
                     # Wait for page to redirect after entering values
                     previous_url = page.url
                     try:
                         page.wait_for_url(lambda url: url != previous_url, timeout=10000)
-                        print("✅ Page redirected after price filter selection")
+                        log_message("✅ Page redirected after price filter selection")
                     except Exception:
-                        print("⚠️ URL did not change after filter selection, waiting for load event instead.")
+                        log_message("⚠️ URL did not change after filter selection, waiting for load event instead.")
                         page.wait_for_load_state("load")
                     
                     time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
             
         except Exception as e:
-            print(f"⚠️ Error with price range form: {e}")
+            log_message(f"⚠️ Error with price range form: {e}")
 
         #############################
         ### 5. SPACE AVAILABLE FILTER ###
@@ -267,11 +263,11 @@ def select_autocomplete_option(context):
             space_input = show_space_input_dialog()
             
             if space_input is None:
-                print("❌ Space input cancelled by user")
+                log_message("❌ Space input cancelled by user")
                 context.close()
                 return None
             elif space_input == "skip":
-                print("⏭️ Skipping space filter...")
+                log_message("⏭️ Skipping space filter...")
             else:
                 min_space = space_input['min']
                 max_space = space_input['max']
@@ -292,7 +288,7 @@ def select_autocomplete_option(context):
                         max_input = sf_inputs.nth(1)
                         max_input.fill(max_space, force=True)
                     elif max_space and sf_count == 1:
-                        print("⚠️ Only found one SF input, cannot set maximum")
+                        log_message("⚠️ Only found one SF input, cannot set maximum")
                         
                     # Wait for page to redirect after entering space values
                     if min_space or max_space:
@@ -301,19 +297,23 @@ def select_autocomplete_option(context):
                         try:
                             page.wait_for_url(lambda url: url != previous_url, timeout=10000)
                         except Exception:
-                            print("⚠️ URL did not change after space filter selection, waiting for load event instead.")
+                            log_message("⚠️ URL did not change after space filter selection, waiting for load event instead.")
                             page.wait_for_load_state("load")
                         
                         time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
                 
                 except Exception as e:
-                    print(f"⚠️ Error with space form: {e}")
+                    log_message(f"⚠️ Error with space form: {e}")
                 
         except Exception as e:
-            print(f"⚠️ Could not click space available dropdown: {e}")
+            log_message(f"⚠️ Could not click space available dropdown: {e}")
 
         final_url = page.url
-        print(f"\n🌐 Redirected to: {final_url}")
+        log_message(f"🌐 Redirected to: {final_url}")
+
+        # Show final loading message
+        show_loading_message("Setup complete! Preparing search results...")
+        time.sleep(2)  # Give user time to see the final message
 
         page.close()
         
