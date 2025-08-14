@@ -1,6 +1,6 @@
 import time
 import random
-from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, close_gui
+from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_price_input_dialog, show_space_input_dialog, show_loading_message, close_gui
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -187,52 +187,61 @@ def select_autocomplete_option(context):
                 except Exception as e:
                     print(f"⚠️ Error reading pill {i}: {e}")
             
-            # Ask user to choose a price range option
-            while True:
-                try:
-                    user_input = input("👉 Select price range type by number (or press Enter to skip): ")
-                    if user_input.strip() == "":
-                        print("⏭️ Skipping price range selection...")
-                        break
-                    choice = int(user_input)
-                    if choice in pill_options:
-                        pill_options[choice]["element"].click()
-                        print(f"✅ Selected price range type: {pill_options[choice]['text']}")
-                        
-                        # Ask for min and max values
-                        min_value = input("👉 Enter minimum value (or press Enter to skip): ").strip()
-                        max_value = input("👉 Enter maximum value (or press Enter to skip): ").strip()
-                        
-                        # Find and fill the text inputs
-                        try:
-                            if min_value:
-                                min_input = price_form.locator('input[type="text"]').first
-                                min_input.clear()
-                                min_input.type(min_value)
-                                
-                            if max_value:
-                                max_input = price_form.locator('input[type="text"]').nth(1)
-                                max_input.clear()
-                                max_input.type(max_value)
-                        except Exception as e:
-                            print(f"⚠️ Error entering values: {e}")
-                        
-                        # Wait for page to redirect after entering values
-                        previous_url = page.url
-                        try:
-                            page.wait_for_url(lambda url: url != previous_url, timeout=10000)
-                            print("✅ Page redirected after price filter selection")
-                        except Exception:
-                            print("⚠️ URL did not change after filter selection, waiting for load event instead.")
-                            page.wait_for_load_state("load")
-                        
-                        time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
-                        
-                        break
-                    else:
-                        print("❌ Invalid number. Try again.")
-                except ValueError:
-                    print("❌ Please enter a number.")
+            # Show GUI dialog for price range selection
+            selected_price = show_price_range_dialog(pill_options)
+            
+            if selected_price is None:
+                print("❌ Price range selection cancelled by user")
+                context.close()
+                return None
+            elif selected_price == "skip":
+                print("⏭️ Skipping price range selection...")
+                # Skip directly to step 5 (space filter)
+            else:
+                pill_options[selected_price]["element"].click()
+                print(f"✅ Selected price range type: {pill_options[selected_price]['text']}")
+                
+                # Show price input GUI with the selected unit
+                unit_label = pill_options[selected_price]['text']
+                price_input = show_price_input_dialog(unit_label)
+                
+                if price_input is None:
+                    print("❌ Price input cancelled by user")
+                    context.close()
+                    return None
+                elif price_input == "skip":
+                    print("⏭️ Skipping price value entry...")
+                else:
+                    min_value = price_input['min']
+                    max_value = price_input['max']
+                    
+                    # Find and fill the text inputs
+                    try:
+                        if min_value:
+                            min_input = price_form.locator('input[type="text"]').first
+                            min_input.clear()
+                            min_input.type(min_value)
+                            
+                        if max_value:
+                            max_input = price_form.locator('input[type="text"]').nth(1)
+                            max_input.clear()
+                            max_input.type(max_value)
+                            
+                        if min_value or max_value:
+                            show_loading_message("Applying price filter...")
+                    except Exception as e:
+                        print(f"⚠️ Error entering values: {e}")
+                    
+                    # Wait for page to redirect after entering values
+                    previous_url = page.url
+                    try:
+                        page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                        print("✅ Page redirected after price filter selection")
+                    except Exception:
+                        print("⚠️ URL did not change after filter selection, waiting for load event instead.")
+                        page.wait_for_load_state("load")
+                    
+                    time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
             
         except Exception as e:
             print(f"⚠️ Error with price range form: {e}")
@@ -254,42 +263,51 @@ def select_autocomplete_option(context):
             space_dropdown.wait_for(state="visible", timeout=10000)
             space_dropdown.click()
 
-            print("\n🏢 Filter by size: ")                
-            # Ask for min and max space values
-            min_space = input("👉 Enter minimum space (or press Enter to skip): ").strip()
-            max_space = input("👉 Enter maximum space (or press Enter to skip): ").strip()
+            # Show space input GUI
+            space_input = show_space_input_dialog()
             
-            space_form = page.locator(f'form[name="{space_form_name}"]')
-            try:
-                space_form.wait_for(state="attached", timeout=5000)
+            if space_input is None:
+                print("❌ Space input cancelled by user")
+                context.close()
+                return None
+            elif space_input == "skip":
+                print("⏭️ Skipping space filter...")
+            else:
+                min_space = space_input['min']
+                max_space = space_input['max']
                 
-                # Find text inputs with "SF" in placeholder
-                sf_inputs = space_form.locator('input[type="text"][placeholder*="SF"]')
-                sf_count = sf_inputs.count()
+                space_form = page.locator(f'form[name="{space_form_name}"]')
+                try:
+                    space_form.wait_for(state="attached", timeout=5000)
+                    
+                    # Find text inputs with "SF" in placeholder
+                    sf_inputs = space_form.locator('input[type="text"][placeholder*="SF"]')
+                    sf_count = sf_inputs.count()
+                    
+                    if min_space and sf_count > 0:
+                        min_input = sf_inputs.first
+                        min_input.fill(min_space, force=True)
+                        
+                    if max_space and sf_count > 1:
+                        max_input = sf_inputs.nth(1)
+                        max_input.fill(max_space, force=True)
+                    elif max_space and sf_count == 1:
+                        print("⚠️ Only found one SF input, cannot set maximum")
+                        
+                    # Wait for page to redirect after entering space values
+                    if min_space or max_space:
+                        show_loading_message("Applying space filter...")
+                        previous_url = page.url
+                        try:
+                            page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                        except Exception:
+                            print("⚠️ URL did not change after space filter selection, waiting for load event instead.")
+                            page.wait_for_load_state("load")
+                        
+                        time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
                 
-                if min_space and sf_count > 0:
-                    min_input = sf_inputs.first
-                    min_input.fill(min_space, force=True)
-                    
-                if max_space and sf_count > 1:
-                    max_input = sf_inputs.nth(1)
-                    max_input.fill(max_space, force=True)
-                elif max_space and sf_count == 1:
-                    print("⚠️ Only found one SF input, cannot set maximum")
-                    
-                # Wait for page to redirect after entering space values
-                if min_space or max_space:
-                    previous_url = page.url
-                    try:
-                        page.wait_for_url(lambda url: url != previous_url, timeout=10000)
-                    except Exception:
-                        print("⚠️ URL did not change after space filter selection, waiting for load event instead.")
-                        page.wait_for_load_state("load")
-                    
-                    time.sleep(random.uniform(0.5, 1))  # Extra delay for dynamic content to settle
-                
-            except Exception as e:
-                print(f"⚠️ Error with space form: {e}")
+                except Exception as e:
+                    print(f"⚠️ Error with space form: {e}")
                 
         except Exception as e:
             print(f"⚠️ Could not click space available dropdown: {e}")

@@ -290,6 +290,142 @@ class PropertySearchGUI:
         self.root.mainloop()
         return self.selected_choice
     
+    def show_price_input(self, unit_label):
+        """Show price input dialog with min/max fields"""
+        self.clear_content()
+        self.root.title("Property Search - Price Range")
+        self.root.geometry("450x350")
+        
+        # Title label
+        title_label = tk.Label(self.main_frame, text=f"Enter Price Range ({unit_label})", 
+                              font=("Arial", 14, "bold"), pady=20)
+        title_label.pack()
+        
+        # Min price frame
+        min_frame = tk.Frame(self.main_frame)
+        min_frame.pack(pady=10)
+        
+        min_label = tk.Label(min_frame, text="Minimum Price:", font=("Arial", 12))
+        min_label.pack(side="left", padx=(0, 10))
+        
+        self.min_price_entry = tk.Entry(min_frame, font=("Arial", 12), width=15)
+        self.min_price_entry.pack(side="left", padx=(0, 5))
+        
+        min_unit_label = tk.Label(min_frame, text=unit_label, font=("Arial", 12))
+        min_unit_label.pack(side="left")
+        
+        # Max price frame
+        max_frame = tk.Frame(self.main_frame)
+        max_frame.pack(pady=10)
+        
+        max_label = tk.Label(max_frame, text="Maximum Price:", font=("Arial", 12))
+        max_label.pack(side="left", padx=(0, 10))
+        
+        self.max_price_entry = tk.Entry(max_frame, font=("Arial", 12), width=15)
+        self.max_price_entry.pack(side="left", padx=(0, 5))
+        
+        max_unit_label = tk.Label(max_frame, text=unit_label, font=("Arial", 12))
+        max_unit_label.pack(side="left")
+        
+        # Instruction label
+        instruction_label = tk.Label(self.main_frame, 
+                                   text="Enter values or leave blank to skip", 
+                                   font=("Arial", 10), pady=20, fg="gray")
+        instruction_label.pack()
+        
+        # Buttons
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=20)
+        
+        confirm_btn = tk.Button(button_frame, text="Continue", command=self._on_confirm_price,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=20, pady=8)
+        confirm_btn.pack(side="left", padx=15)
+        
+        skip_btn = tk.Button(button_frame, text="Skip", command=self._on_skip,
+                            bg="#28a745", fg="white", font=("Arial", 10),
+                            padx=20, pady=8)
+        skip_btn.pack(side="left", padx=15)
+        
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+                              bg="#6c757d", fg="white", font=("Arial", 10),
+                              padx=15, pady=8)
+        cancel_btn.pack(side="left", padx=15)
+        
+        # Set focus to first input
+        self.min_price_entry.focus_set()
+        
+        self.root.mainloop()
+        return self.selected_choice
+    
+    def show_space_input(self):
+        """Show space input dialog with min/max fields in SF"""
+        self.clear_content()
+        self.root.title("Property Search - Space Size")
+        self.root.geometry("450x350")
+        
+        # Title label
+        title_label = tk.Label(self.main_frame, text="Enter Space Size Range", 
+                              font=("Arial", 14, "bold"), pady=20)
+        title_label.pack()
+        
+        # Min space frame
+        min_frame = tk.Frame(self.main_frame)
+        min_frame.pack(pady=10)
+        
+        min_label = tk.Label(min_frame, text="Minimum Space:", font=("Arial", 12))
+        min_label.pack(side="left", padx=(0, 10))
+        
+        self.min_space_entry = tk.Entry(min_frame, font=("Arial", 12), width=15)
+        self.min_space_entry.pack(side="left", padx=(0, 5))
+        
+        min_sf_label = tk.Label(min_frame, text="SF", font=("Arial", 12))
+        min_sf_label.pack(side="left")
+        
+        # Max space frame
+        max_frame = tk.Frame(self.main_frame)
+        max_frame.pack(pady=10)
+        
+        max_label = tk.Label(max_frame, text="Maximum Space:", font=("Arial", 12))
+        max_label.pack(side="left", padx=(0, 10))
+        
+        self.max_space_entry = tk.Entry(max_frame, font=("Arial", 12), width=15)
+        self.max_space_entry.pack(side="left", padx=(0, 5))
+        
+        max_sf_label = tk.Label(max_frame, text="SF", font=("Arial", 12))
+        max_sf_label.pack(side="left")
+        
+        # Instruction label
+        instruction_label = tk.Label(self.main_frame, 
+                                   text="Enter values in square feet or leave blank to skip", 
+                                   font=("Arial", 10), pady=20, fg="gray")
+        instruction_label.pack()
+        
+        # Buttons
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=20)
+        
+        confirm_btn = tk.Button(button_frame, text="Continue", command=self._on_confirm_space,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=20, pady=8)
+        confirm_btn.pack(side="left", padx=15)
+        
+        skip_btn = tk.Button(button_frame, text="Skip", command=self._on_skip,
+                            bg="#28a745", fg="white", font=("Arial", 10),
+                            padx=20, pady=8)
+        skip_btn.pack(side="left", padx=15)
+        
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+                              bg="#6c757d", fg="white", font=("Arial", 10),
+                              padx=15, pady=8)
+        cancel_btn.pack(side="left", padx=15)
+        
+        # Set focus to first input
+        self.min_space_entry.focus_set()
+        
+        self.root.mainloop()
+        return self.selected_choice
+    
     def _add_buttons(self):
         """Add Continue and Cancel buttons"""
         button_frame = tk.Frame(self.main_frame)
@@ -318,6 +454,20 @@ class PropertySearchGUI:
     
     def _on_skip(self):
         self.selected_choice = "skip"
+        self.root.quit()
+    
+    def _on_confirm_price(self):
+        """Handle price input confirmation"""
+        min_price = self.min_price_entry.get().strip()
+        max_price = self.max_price_entry.get().strip()
+        self.selected_choice = {"min": min_price, "max": max_price}
+        self.root.quit()
+    
+    def _on_confirm_space(self):
+        """Handle space input confirmation"""
+        min_space = self.min_space_entry.get().strip()
+        max_space = self.max_space_entry.get().strip()
+        self.selected_choice = {"min": min_space, "max": max_space}
         self.root.quit()
     
     def show_loading_message(self, message="Loading..."):
@@ -395,6 +545,16 @@ def show_price_range_dialog(price_options):
     """Show a GUI dialog for price range selection using persistent window"""
     gui = get_gui_instance()
     return gui.show_price_range_selection(price_options)
+
+def show_price_input_dialog(unit_label):
+    """Show a GUI dialog for price input using persistent window"""
+    gui = get_gui_instance()
+    return gui.show_price_input(unit_label)
+
+def show_space_input_dialog():
+    """Show a GUI dialog for space input using persistent window"""
+    gui = get_gui_instance()
+    return gui.show_space_input()
 
 def show_loading_message(message="Loading..."):
     """Show a loading message using persistent window"""
