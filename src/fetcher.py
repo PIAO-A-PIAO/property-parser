@@ -1,8 +1,13 @@
 from parser import parse_articles_from_string, extract_next_page_url, append_to_csv
 from gui import log_message
 import time
+from datetime import datetime
 
-def fetch_all_pages(url, context, output_csv="parsed_listings.csv"):
+def fetch_all_pages(url, context, output_csv=None):
+    if output_csv is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_csv = f"parsed_listings_{timestamp}.csv"
+    
     page = context.new_page()
 
     current_url = url

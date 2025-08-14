@@ -86,6 +86,9 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
 
             for file in files:
                 rel_path = os.path.relpath(os.path.join(root, file), extract_to)
+                # Skip .csv files during deletion
+                if file.endswith('.csv'):
+                    continue
                 if rel_path not in new_files and rel_path not in exclude_paths:
                     file_to_delete = os.path.join(root, file)
                     try:
@@ -97,6 +100,9 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
 
         # Now move new files from extracted folder to extract_to, overwriting
         for rel_path in new_files:
+            # Skip .csv files during overwrite
+            if rel_path.endswith('.csv'):
+                continue
             src_file = os.path.join(root_folder, rel_path)
             dst_file = os.path.join(extract_to, rel_path)
             dst_dir = os.path.dirname(dst_file)
