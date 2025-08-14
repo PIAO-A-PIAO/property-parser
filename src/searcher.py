@@ -1,6 +1,6 @@
 import time
 import random
-from gui import show_sale_type_dialog
+from gui import show_sale_type_dialog, show_property_type_dialog
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -69,17 +69,16 @@ def select_autocomplete_option(context):
         for idx, val in prop_options.items():
             print(f"{idx}: {val['text']}")
 
-        while True:
-            try:
-                selected_prop = int(input("👉 Select property type by number: "))
-                if selected_prop in prop_options:
-                    prop_options[selected_prop]["element"].click()
-                    print(f"✅ Selected Property Type: {prop_options[selected_prop]['text']}")
-                    break
-                else:
-                    print("❌ Invalid number. Try again.")
-            except ValueError:
-                print("❌ Please enter a number.")
+        # Show GUI dialog for property type selection
+        selected_prop = show_property_type_dialog(prop_options)
+        
+        if selected_prop is None:
+            print("❌ Property type selection cancelled by user")
+            context.close()
+            return None
+            
+        prop_options[selected_prop]["element"].click()
+        print(f"✅ Selected Property Type: {prop_options[selected_prop]['text']}")
 
         time.sleep(random.uniform(0.5, 1))
 
