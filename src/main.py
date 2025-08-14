@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 browser = p.chromium.launch(
                     executable_path=browser_executable,
                     headless=False,
-                    args=["--window-position=-10000,-10000"],
+                    # args=["--window-position=-10000,-10000"],
                 )
         else:
             log_message("⬇️ Launching default Chromium from Playwright...")
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             log_message("📊 Starting data collection from search results")
             fetch_all_pages(final_url, context)
             
-            show_loading_message("Data collection complete! Processing results...")
+            show_loading_message("Processing results...")
             log_message("✅ Property data collection finished successfully")
             
             import time

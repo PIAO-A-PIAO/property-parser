@@ -15,6 +15,11 @@ class PropertySearchGUI:
         self.selected_choice = None
         self.selection_var = tk.IntVar(value=-1)
         
+        # Navigation stack to track user's journey
+        self.nav_stack = []
+        self.current_step = None
+        self.step_data = {}
+        
         # Create main container with log section
         self.content_frame = tk.Frame(self.root)
         self.content_frame.pack(fill="both", expand=True, padx=10, pady=(10, 0))
@@ -65,6 +70,11 @@ class PropertySearchGUI:
         self.root.title("Property Search - Sale Type")
         self.root.geometry("400x450")
         
+        # Track this step in navigation
+        self.current_step = 'sale_type'
+        if 'sale_type' not in self.nav_stack:
+            self.nav_stack.append('sale_type')
+        
         # Title label
         title_label = tk.Label(self.main_frame, text="What are you looking for?", 
                               font=("Arial", 14, "bold"), pady=10)
@@ -88,6 +98,11 @@ class PropertySearchGUI:
         self.clear_content()
         self.root.title("Property Search - Property Type")
         self.root.geometry("450x600")
+        
+        # Track this step in navigation
+        self.current_step = 'property_type'
+        if 'property_type' not in self.nav_stack:
+            self.nav_stack.append('property_type')
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Select Property Type", 
@@ -134,10 +149,10 @@ class PropertySearchGUI:
                                padx=20, pady=5)
         confirm_btn.pack(side="left", padx=10)
         
-        cancel_btn = tk.Button(button_container, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_container, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=20, pady=5)
-        cancel_btn.pack(side="left", padx=10)
+        back_btn.pack(side="left", padx=10)
         
         self.root.mainloop()
         return self.selected_choice
@@ -147,6 +162,11 @@ class PropertySearchGUI:
         self.clear_content()
         self.root.title("Property Search - Location")
         self.root.geometry("450x500")
+        
+        # Track this step in navigation
+        self.current_step = 'location_input'
+        if 'location_input' not in self.nav_stack:
+            self.nav_stack.append('location_input')
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Enter Location Keyword", 
@@ -176,10 +196,10 @@ class PropertySearchGUI:
                                padx=20, pady=5)
         confirm_btn.pack(side="left", padx=15)
         
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_frame, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=20, pady=5)
-        cancel_btn.pack(side="left", padx=15)
+        back_btn.pack(side="left", padx=15)
         
         self.root.mainloop()
         return self.selected_choice
@@ -199,6 +219,11 @@ class PropertySearchGUI:
         self.clear_content()
         self.root.title("Property Search - Select Location")
         self.root.geometry("450x600")
+        
+        # Track this step in navigation
+        self.current_step = 'location_options'
+        if 'location_options' not in self.nav_stack:
+            self.nav_stack.append('location_options')
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Select Location", 
@@ -245,45 +270,51 @@ class PropertySearchGUI:
                                padx=20, pady=15)
         confirm_btn.pack(side="left", padx=10)
         
-        cancel_btn = tk.Button(button_container, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_container, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=20, pady=15)
-        cancel_btn.pack(side="left", padx=10)
+        back_btn.pack(side="left", padx=10)
         
         self.root.mainloop()
         return self.selected_choice
     
     def show_price_range_selection(self, price_options):
-        """Show price range options selection in the same window"""
+        """Show combined price range selection and input in the same window"""
         self.clear_content()
         self.root.title("Property Search - Price Range")
-        self.root.geometry("450x600")
+        self.root.geometry("450x750")
+        
+        # Track this step in navigation
+        self.current_step = 'price_range'
+        if 'price_range' not in self.nav_stack:
+            self.nav_stack.append('price_range')
+        
+        # Store price options for later use
+        self.price_options = price_options
         
         # Title label
-        title_label = tk.Label(self.main_frame, text="Select Price Range Type", 
+        title_label = tk.Label(self.main_frame, text="Price Range Selection", 
                               font=("Arial", 14, "bold"), pady=10)
         title_label.pack()
         
         # Instruction label
         instruction_label = tk.Label(self.main_frame, 
-                                   text="Choose a price range option or skip to continue:", 
+                                   text="Select a price range type and optionally enter specific values:", 
                                    font=("Arial", 11), pady=10)
         instruction_label.pack()
         
-        # Buttons frame - pack first so it stays at bottom
-        button_frame = tk.Frame(self.main_frame)
-        button_frame.pack(side="bottom", pady=15, fill="x")
+        # Main content frame
+        content_frame = tk.Frame(self.main_frame)
+        content_frame.pack(fill="both", expand=True, padx=20)
         
-        # Center the buttons
-        button_container = tk.Frame(button_frame)
-        button_container.pack()
+        # Price range options section
+        options_section = tk.LabelFrame(content_frame, text="Price Range Type", 
+                                       font=("Arial", 12, "bold"), pady=10)
+        options_section.pack(fill="x", pady=(0, 15))
         
         # Create scrollable frame for radio buttons
-        canvas_frame = tk.Frame(self.main_frame)
-        canvas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
-        
-        canvas = tk.Canvas(canvas_frame)
-        scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        canvas = tk.Canvas(options_section, height=120)
+        scrollbar = tk.Scrollbar(options_section, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas)
         
         scrollable_frame.bind(
@@ -298,36 +329,122 @@ class PropertySearchGUI:
         for idx, option in price_options.items():
             radio = tk.Radiobutton(scrollable_frame, text="CAD/"+option['text'], 
                                   variable=self.selection_var, value=idx,
-                                  font=("Arial", 11), pady=3, anchor="w")
-            radio.pack(fill="x", padx=20)
+                                  font=("Arial", 11), pady=3, anchor="w",
+                                  command=self._on_price_type_selected)
+            radio.pack(fill="x", padx=10)
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Add buttons to the button container
-        confirm_btn = tk.Button(button_container, text="Select & Continue", command=self._on_confirm,
-                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
-                               padx=15, pady=8)
+        # Price values section
+        values_section = tk.LabelFrame(content_frame, text="Price Values (Optional)", 
+                                      font=("Arial", 12, "bold"), pady=10)
+        values_section.pack(fill="x", pady=(0, 15))
+        
+        # Unit label (initially empty)
+        self.unit_display = tk.Label(values_section, text="Select a price type above to see unit", 
+                                    font=("Arial", 10), fg="#666", pady=5)
+        self.unit_display.pack()
+        
+        # Min price frame
+        min_frame = tk.Frame(values_section)
+        min_frame.pack(fill="x", pady=5, padx=20)
+        
+        min_label = tk.Label(min_frame, text="Minimum:", font=("Arial", 11), width=12)
+        min_label.pack(side="left")
+        
+        self.min_price_entry = tk.Entry(min_frame, font=("Arial", 11), width=15)
+        self.min_price_entry.pack(side="left", padx=(5, 5))
+        
+        self.min_unit_label = tk.Label(min_frame, text="", font=("Arial", 11), fg="#666")
+        self.min_unit_label.pack(side="left")
+        
+        # Max price frame
+        max_frame = tk.Frame(values_section)
+        max_frame.pack(fill="x", pady=5, padx=20)
+        
+        max_label = tk.Label(max_frame, text="Maximum:", font=("Arial", 11), width=12)
+        max_label.pack(side="left")
+        
+        self.max_price_entry = tk.Entry(max_frame, font=("Arial", 11), width=15)
+        self.max_price_entry.pack(side="left", padx=(5, 5))
+        
+        self.max_unit_label = tk.Label(max_frame, text="", font=("Arial", 11), fg="#666")
+        self.max_unit_label.pack(side="left")
+        
+        # Instructions
+        instruction2_label = tk.Label(values_section, 
+                                    text="Leave blank to skip specific price values", 
+                                    font=("Arial", 9), fg="#888", pady=5)
+        instruction2_label.pack()
+        
+        # Buttons frame
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=20)
+        
+        confirm_btn = tk.Button(button_frame, text="Continue", command=self._on_confirm_combined_price,
+                               bg="#007bff", fg="white", font=("Arial", 11, "bold"),
+                               padx=25, pady=8)
         confirm_btn.pack(side="left", padx=8)
         
-        skip_btn = tk.Button(button_container, text="Skip", command=self._on_skip,
-                            bg="#28a745", fg="white", font=("Arial", 10),
-                            padx=20, pady=8)
+        skip_btn = tk.Button(button_frame, text="Skip", command=self._on_skip,
+                            bg="#28a745", fg="white", font=("Arial", 11),
+                            padx=25, pady=8)
         skip_btn.pack(side="left", padx=8)
         
-        cancel_btn = tk.Button(button_container, text="Cancel", command=self._on_cancel,
-                              bg="#6c757d", fg="white", font=("Arial", 10),
-                              padx=15, pady=8)
-        cancel_btn.pack(side="left", padx=8)
+        back_btn = tk.Button(button_frame, text="Back", command=self._on_back,
+                              bg="#6c757d", fg="white", font=("Arial", 11),
+                              padx=25, pady=8)
+        back_btn.pack(side="left", padx=8)
         
         self.root.mainloop()
         return self.selected_choice
+    
+    def _on_price_type_selected(self):
+        """Update unit labels when price type is selected"""
+        if self.selection_var.get() != -1 and hasattr(self, 'price_options'):
+            selected_idx = self.selection_var.get()
+            if selected_idx in self.price_options:
+                unit = self.price_options[selected_idx]['text']
+                unit_text = f"CAD/{unit}"
+                
+                # Update unit display and input labels
+                self.unit_display.config(text=f"Selected unit: {unit_text}")
+                self.min_unit_label.config(text=unit_text)
+                self.max_unit_label.config(text=unit_text)
+    
+    def _on_confirm_combined_price(self):
+        """Handle combined price selection and input confirmation"""
+        if self.selection_var.get() == -1:
+            messagebox.showwarning("Selection Required", "Please select a price range type before continuing.")
+            return
+        
+        selected_price_type = self.selection_var.get()
+        min_price = self.min_price_entry.get().strip()
+        max_price = self.max_price_entry.get().strip()
+        
+        # Create combined result object
+        result = {
+            'price_type': selected_price_type,
+            'min_value': min_price if min_price else None,
+            'max_value': max_price if max_price else None,
+            'unit_label': self.price_options[selected_price_type]['text']
+        }
+        
+        self.selected_choice = result
+        self.root.quit()
+    
     
     def show_price_input(self, unit_label):
         """Show price input dialog with min/max fields"""
         self.clear_content()
         self.root.title("Property Search - Price Range")
         self.root.geometry("450x550")
+        
+        # Track this step in navigation
+        self.current_step = 'price_input'
+        if 'price_input' not in self.nav_stack:
+            self.nav_stack.append('price_input')
         
         # Title label
         title_label = tk.Label(self.main_frame, text=f"Enter Price Range ({unit_label})", 
@@ -380,10 +497,10 @@ class PropertySearchGUI:
                             padx=20, pady=8)
         skip_btn.pack(side="left", padx=15)
         
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_frame, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=15, pady=8)
-        cancel_btn.pack(side="left", padx=15)
+        back_btn.pack(side="left", padx=15)
         
         # Set focus to first input
         self.min_price_entry.focus_set()
@@ -396,6 +513,11 @@ class PropertySearchGUI:
         self.clear_content()
         self.root.title("Property Search - Space Size")
         self.root.geometry("450x550")
+        
+        # Track this step in navigation
+        self.current_step = 'space_input'
+        if 'space_input' not in self.nav_stack:
+            self.nav_stack.append('space_input')
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Enter Space Size Range", 
@@ -448,10 +570,10 @@ class PropertySearchGUI:
                             padx=20, pady=8)
         skip_btn.pack(side="left", padx=15)
         
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_frame, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=15, pady=8)
-        cancel_btn.pack(side="left", padx=15)
+        back_btn.pack(side="left", padx=15)
         
         # Set focus to first input
         self.min_space_entry.focus_set()
@@ -460,7 +582,7 @@ class PropertySearchGUI:
         return self.selected_choice
     
     def _add_buttons(self):
-        """Add Continue and Cancel buttons"""
+        """Add Continue and Back buttons"""
         button_frame = tk.Frame(self.main_frame)
         button_frame.pack(pady=20)
         
@@ -469,10 +591,10 @@ class PropertySearchGUI:
                                padx=20, pady=5)
         confirm_btn.pack(side="left", padx=10)
         
-        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+        back_btn = tk.Button(button_frame, text="Back", command=self._on_back,
                               bg="#6c757d", fg="white", font=("Arial", 10),
                               padx=20, pady=5)
-        cancel_btn.pack(side="left", padx=10)
+        back_btn.pack(side="left", padx=10)
     
     def _on_confirm(self):
         if self.selection_var.get() == -1:
@@ -481,9 +603,33 @@ class PropertySearchGUI:
         self.selected_choice = self.selection_var.get()
         self.root.quit()
     
-    def _on_cancel(self):
-        self.selected_choice = None
+    def _on_back(self):
+        if len(self.nav_stack) > 1:
+            # Remove current step and go back to previous
+            current_step = self.nav_stack.pop()
+            previous_step = self.nav_stack[-1]
+            
+            # Clear any stored data for steps that come after the previous step
+            self._clear_subsequent_step_data(previous_step)
+            
+            self.selected_choice = {'action': 'back', 'step': previous_step}
+        else:
+            # First step, cancel the entire process
+            self.selected_choice = None
         self.root.quit()
+        
+    def _clear_subsequent_step_data(self, current_step):
+        """Clear stored data for steps that come after the current step"""
+        step_order = ['sale_type', 'property_type', 'location_input', 'location_options', 'price_range', 'space_input']
+        
+        try:
+            current_index = step_order.index(current_step)
+            # Clear step_data for all subsequent steps
+            for step in step_order[current_index + 1:]:
+                if step in self.step_data:
+                    del self.step_data[step]
+        except ValueError:
+            pass  # Current step not in order list
     
     def _on_skip(self):
         self.selected_choice = "skip"
