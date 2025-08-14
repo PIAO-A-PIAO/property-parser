@@ -5,7 +5,7 @@ class PropertySearchGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Property Search")
-        self.root.geometry("450x500")
+        self.root.geometry("450x700")
         self.root.resizable(False, False)
         self.root.eval('tk::PlaceWindow . center')
         self.root.transient()
@@ -63,7 +63,7 @@ class PropertySearchGUI:
         """Show sale type selection in the same window"""
         self.clear_content()
         self.root.title("Property Search - Sale Type")
-        self.root.geometry("400x250")
+        self.root.geometry("400x450")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="What are you looking for?", 
@@ -87,7 +87,7 @@ class PropertySearchGUI:
         """Show property type selection in the same window"""
         self.clear_content()
         self.root.title("Property Search - Property Type")
-        self.root.geometry("450x400")
+        self.root.geometry("450x600")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Select Property Type", 
@@ -146,7 +146,7 @@ class PropertySearchGUI:
         """Show location keyword input in the same window"""
         self.clear_content()
         self.root.title("Property Search - Location")
-        self.root.geometry("450x300")
+        self.root.geometry("450x500")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Enter Location Keyword", 
@@ -198,7 +198,7 @@ class PropertySearchGUI:
         """Show location autocomplete options selection in the same window"""
         self.clear_content()
         self.root.title("Property Search - Select Location")
-        self.root.geometry("450x400")
+        self.root.geometry("450x600")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Select Location", 
@@ -257,7 +257,7 @@ class PropertySearchGUI:
         """Show price range options selection in the same window"""
         self.clear_content()
         self.root.title("Property Search - Price Range")
-        self.root.geometry("450x400")
+        self.root.geometry("450x600")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Select Price Range Type", 
@@ -327,7 +327,7 @@ class PropertySearchGUI:
         """Show price input dialog with min/max fields"""
         self.clear_content()
         self.root.title("Property Search - Price Range")
-        self.root.geometry("450x350")
+        self.root.geometry("450x550")
         
         # Title label
         title_label = tk.Label(self.main_frame, text=f"Enter Price Range ({unit_label})", 
@@ -395,7 +395,7 @@ class PropertySearchGUI:
         """Show space input dialog with min/max fields in SF"""
         self.clear_content()
         self.root.title("Property Search - Space Size")
-        self.root.geometry("450x350")
+        self.root.geometry("450x550")
         
         # Title label
         title_label = tk.Label(self.main_frame, text="Enter Space Size Range", 
@@ -507,7 +507,7 @@ class PropertySearchGUI:
         """Show a loading message in the same window"""
         self.clear_content()
         self.root.title("Property Search - Loading")
-        self.root.geometry("400x200")
+        self.root.geometry("400x400")
         
         # Loading label
         loading_label = tk.Label(self.main_frame, text=message, 
