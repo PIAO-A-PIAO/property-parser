@@ -109,6 +109,117 @@ class PropertySearchGUI:
         self.root.mainloop()
         return self.selected_choice
     
+    def show_location_input(self):
+        """Show location keyword input in the same window"""
+        self.clear_content()
+        self.root.title("Property Search - Location")
+        self.root.geometry("450x300")
+        
+        # Title label
+        title_label = tk.Label(self.main_frame, text="Enter Location Keyword", 
+                              font=("Arial", 14, "bold"), pady=20)
+        title_label.pack()
+        
+        # Instruction label
+        instruction_label = tk.Label(self.main_frame, 
+                                   text="Enter a location keyword (e.g., Toronto, Warehouse, etc.):", 
+                                   font=("Arial", 11), pady=10)
+        instruction_label.pack()
+        
+        # Entry field
+        self.location_entry = tk.Entry(self.main_frame, font=("Arial", 12), width=40)
+        self.location_entry.pack(pady=10)
+        self.location_entry.focus_set()  # Set focus to the entry field
+        
+        # Bind Enter key to confirm
+        self.location_entry.bind('<Return>', lambda event: self._on_confirm_location())
+        
+        # Buttons
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=20)
+        
+        confirm_btn = tk.Button(button_frame, text="Continue", command=self._on_confirm_location,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=20, pady=5)
+        confirm_btn.pack(side="left", padx=15)
+        
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=self._on_cancel,
+                              bg="#6c757d", fg="white", font=("Arial", 10),
+                              padx=20, pady=5)
+        cancel_btn.pack(side="left", padx=15)
+        
+        self.root.mainloop()
+        return self.selected_choice
+    
+    def _on_confirm_location(self):
+        """Handle location input confirmation"""
+        location_text = self.location_entry.get().strip()
+        if not location_text:
+            messagebox.showwarning("Input Required", "Please enter a location keyword.")
+            self.location_entry.focus_set()
+            return
+        self.selected_choice = location_text
+        self.root.quit()
+    
+    def show_location_options_selection(self, location_options):
+        """Show location autocomplete options selection in the same window"""
+        self.clear_content()
+        self.root.title("Property Search - Select Location")
+        self.root.geometry("450x400")
+        
+        # Title label
+        title_label = tk.Label(self.main_frame, text="Select Location", 
+                              font=("Arial", 14, "bold"), pady=10)
+        title_label.pack()
+        
+        # Buttons frame - pack first so it stays at bottom
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(side="bottom", pady=15, fill="x")
+        
+        # Center the buttons
+        button_container = tk.Frame(button_frame)
+        button_container.pack()
+        
+        # Create scrollable frame for radio buttons
+        canvas_frame = tk.Frame(self.main_frame)
+        canvas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+        
+        canvas = tk.Canvas(canvas_frame)
+        scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Radio buttons for each location option
+        for idx, option in location_options.items():
+            radio = tk.Radiobutton(scrollable_frame, text=option['text'], 
+                                  variable=self.selection_var, value=idx,
+                                  font=("Arial", 11), pady=3, anchor="w")
+            radio.pack(fill="x", padx=20)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Add buttons to the button container
+        confirm_btn = tk.Button(button_container, text="Continue", command=self._on_confirm,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=20, pady=15)
+        confirm_btn.pack(side="left", padx=10)
+        
+        cancel_btn = tk.Button(button_container, text="Cancel", command=self._on_cancel,
+                              bg="#6c757d", fg="white", font=("Arial", 10),
+                              padx=20, pady=15)
+        cancel_btn.pack(side="left", padx=10)
+        
+        self.root.mainloop()
+        return self.selected_choice
+    
     def _add_buttons(self):
         """Add Continue and Cancel buttons"""
         button_frame = tk.Frame(self.main_frame)
@@ -158,6 +269,16 @@ def show_property_type_dialog(prop_options):
     """Show a GUI dialog for property type selection using persistent window"""
     gui = get_gui_instance()
     return gui.show_property_type_selection(prop_options)
+
+def show_location_input_dialog():
+    """Show a GUI dialog for location keyword input using persistent window"""
+    gui = get_gui_instance()
+    return gui.show_location_input()
+
+def show_location_options_dialog(location_options):
+    """Show a GUI dialog for location options selection using persistent window"""
+    gui = get_gui_instance()
+    return gui.show_location_options_selection(location_options)
 
 def close_gui():
     """Close the persistent GUI window"""

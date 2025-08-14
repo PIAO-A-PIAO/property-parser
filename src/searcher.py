@@ -1,6 +1,6 @@
 import time
 import random
-from gui import show_sale_type_dialog, show_property_type_dialog, close_gui
+from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, close_gui
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -85,7 +85,16 @@ def select_autocomplete_option(context):
         #############################
         ### 3. LOCATION AUTOCOMPLETE ###
         #############################
-        keyword = input("\n🗺️ Enter a location keyword (e.g., Toronto, Warehouse, etc.): ")
+        
+        # Show GUI dialog for location input
+        keyword = show_location_input_dialog()
+        
+        if keyword is None:
+            print("❌ Location input cancelled by user")
+            context.close()
+            return None
+            
+        print(f"\n🗺️ Using location keyword: {keyword}")
         location_input = page.locator("input[name='geography']:visible")
         location_input.click()
         location_input.type(keyword, delay=100)
@@ -115,18 +124,17 @@ def select_autocomplete_option(context):
         for idx, val in options.items():
             print(f"{idx}: {val['text']}")
 
-        while True:
-            try:
-                selection = int(input("👉 Which location do you mean? Enter number: "))
-                if selection in options:
-                    previous_url = page.url
-                    options[selection]["element"].click()
-                    print(f"✅ Selected: {options[selection]['text']}")
-                    break
-                else:
-                    print("❌ Invalid number. Try again.")
-            except ValueError:
-                print("❌ Please enter a number.")
+        # Show GUI dialog for location options selection
+        selected_location = show_location_options_dialog(options)
+        
+        if selected_location is None:
+            print("❌ Location selection cancelled by user")
+            context.close()
+            return None
+            
+        previous_url = page.url
+        options[selected_location]["element"].click()
+        print(f"✅ Selected: {options[selected_location]['text']}")
 
         # Wait for URL to change after selection (up to 10 seconds)
         try:
