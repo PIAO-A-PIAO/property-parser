@@ -87,8 +87,14 @@ class PropertySearchGUI:
                                   font=("Arial", 12), pady=5)
             radio.pack(anchor="w", padx=50)
         
-        # Buttons
-        self._add_buttons()
+        # Buttons (only Continue button for first step)
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=20)
+        
+        confirm_btn = tk.Button(button_frame, text="Continue", command=self._on_confirm,
+                               bg="#007bff", fg="white", font=("Arial", 10, "bold"),
+                               padx=20, pady=5)
+        confirm_btn.pack()
         
         self.root.mainloop()
         return self.selected_choice
