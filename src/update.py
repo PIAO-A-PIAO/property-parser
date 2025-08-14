@@ -54,11 +54,11 @@ def is_update_available(compare_full_line=False):
 
 
 def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
-    print("⬇️ Downloading update archive...")
+    print("Downloading update archive...")
     with urllib.request.urlopen(zip_url) as response:
         data = response.read()
 
-    print("📦 Extracting files...")
+    print("Extracting files...")
     with zipfile.ZipFile(io.BytesIO(data)) as z:
         temp_extract_path = os.path.join(extract_to, "_temp_update")
         if os.path.exists(temp_extract_path):
@@ -92,10 +92,10 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
                 if rel_path not in new_files and rel_path not in exclude_paths:
                     file_to_delete = os.path.join(root, file)
                     try:
-                        print(f"🗑️ Deleting obsolete file {file_to_delete}")
+                        print(f"Deleting obsolete file {file_to_delete}")
                         os.remove(file_to_delete)
                     except PermissionError:
-                        print(f"⚠️ Permission denied, cannot delete {file_to_delete}")
+                        print(f"Permission denied, cannot delete {file_to_delete}")
 
 
         # Now move new files from extracted folder to extract_to, overwriting
@@ -108,7 +108,7 @@ def download_and_replace_update(zip_url, extract_to=PROJECT_ROOT):
             dst_dir = os.path.dirname(dst_file)
             if not os.path.exists(dst_dir):
                 os.makedirs(dst_dir)
-            print(f"➡️ Updating {dst_file}")
+            print(f"Updating {dst_file}")
             shutil.move(src_file, dst_file)
 
         shutil.rmtree(temp_extract_path)
@@ -119,18 +119,18 @@ if __name__ == "__main__":
         try:
             remote_line = get_remote_version_info()
             version, desc = parse_version_line(remote_line)
-            print(f"🔔 New version {version} available: {desc}")
+            print(f"New version {version} available: {desc}")
 
             download_and_replace_update(UPDATE_ZIP_URL, PROJECT_ROOT)
-            print("✅ Update completed successfully.")
+            print("Update completed successfully.")
 
-            print("🔄 Restarting to apply update...")
+            print("Restarting to apply update...")
             time.sleep(1)
             os.execv(sys.executable, ['python'] + sys.argv)
 
         except Exception as e:
-            print(f"❌ Update failed: {e}")
+            print(f"Update failed: {e}")
             print("Continuing with the current version...")
 
     else:
-        print("✅ You’re up to date.")
+        print("You're up to date.")
