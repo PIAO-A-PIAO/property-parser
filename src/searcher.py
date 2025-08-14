@@ -1,5 +1,6 @@
 import time
 import random
+from gui import show_sale_type_dialog
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -26,24 +27,19 @@ def select_autocomplete_option(context):
         except:
             print("⚠️ Page elements may not be fully loaded")
 
-        print("\n📌 What are you looking for?")
-        for idx, val in sale_type_options.items():
-            print(f"{idx}: {val['label']}")
-
-        while True:
-            try:
-                sale_type_choice = int(input("👉 Select by number: "))
-                if sale_type_choice in sale_type_options:
-                    # Wait for sale type option to be visible and click it
-                    locator = page.locator(sale_type_options[sale_type_choice]["selector"])
-                    locator.wait_for(state="visible", timeout=5000)
-                    locator.click()
-                    print(f"✅ Selected: {sale_type_options[sale_type_choice]['label']}")
-                    break
-                else:
-                    print("❌ Invalid number. Try again.")
-            except ValueError:
-                print("❌ Please enter a number.")
+        # Show GUI dialog for sale type selection
+        sale_type_choice = show_sale_type_dialog(sale_type_options)
+        
+        if sale_type_choice is None:
+            print("❌ Selection cancelled by user")
+            context.close()
+            return None
+            
+        # Wait for sale type option to be visible and click it
+        locator = page.locator(sale_type_options[sale_type_choice]["selector"])
+        locator.wait_for(state="visible", timeout=5000)
+        locator.click()
+        print(f"✅ Selected: {sale_type_options[sale_type_choice]['label']}")
 
         time.sleep(random.uniform(0.5, 1))
 
