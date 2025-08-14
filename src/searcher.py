@@ -1,6 +1,6 @@
 import time
 import random
-from gui import show_sale_type_dialog, show_property_type_dialog
+from gui import show_sale_type_dialog, show_property_type_dialog, close_gui
 
 def select_autocomplete_option(context):
         page = context.new_page()
@@ -290,4 +290,8 @@ def select_autocomplete_option(context):
         print(f"\n🌐 Redirected to: {final_url}")
 
         page.close()
+        
+        # Close the GUI window after all selections are complete
+        close_gui()
+        
         return final_url
