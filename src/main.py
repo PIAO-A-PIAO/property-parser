@@ -58,7 +58,7 @@ if __name__ == "__main__":
                 browser = p.chromium.launch(
                     executable_path=browser_executable,
                     headless=False,
-                    # args=["--window-position=-10000,-10000"],
+                    args=["--window-position=-10000,-10000"],
                 )
         else:
             log_message("⬇️ Launching default Chromium from Playwright...")

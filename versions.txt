@@ -13,3 +13,4 @@
 3.0.1: added back buttons
 3.0.2: automatic update
 3.0.3: automatic cleanup
+3.0.4: hide screen...
