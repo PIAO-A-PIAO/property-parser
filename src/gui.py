@@ -296,7 +296,7 @@ class PropertySearchGUI:
         
         # Radio buttons for each price option
         for idx, option in price_options.items():
-            radio = tk.Radiobutton(scrollable_frame, text=option['text'], 
+            radio = tk.Radiobutton(scrollable_frame, text="CAD/"+option['text'], 
                                   variable=self.selection_var, value=idx,
                                   font=("Arial", 11), pady=3, anchor="w")
             radio.pack(fill="x", padx=20)
@@ -523,6 +523,90 @@ class PropertySearchGUI:
         self.root.update()
         self._animate_dots()
     
+    def show_completion_message(self):
+        """Show completion message with finish button"""
+        self.clear_content()
+        self.root.title("Property Search - Complete")
+        self.root.geometry("500x600")
+        
+        # Success icon/title
+        success_label = tk.Label(self.main_frame, text="🎉 Process Complete!", 
+                               font=("Arial", 18, "bold"), fg="#28a745", pady=30)
+        success_label.pack()
+        
+        # Main message
+        message_label = tk.Label(self.main_frame, 
+                               text="Property data has been successfully collected and saved.\nCheck your output file for the results.", 
+                               font=("Arial", 12), pady=20, justify="center")
+        message_label.pack()
+        
+        # Summary info
+        summary_label = tk.Label(self.main_frame, 
+                               text="✅ Search parameters configured\n✅ Data collection completed\n✅ Results saved to CSV file", 
+                               font=("Arial", 11), pady=20, justify="left", fg="#666")
+        summary_label.pack()
+        
+        # Finish button
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=40)
+        
+        finish_btn = tk.Button(button_frame, text="Finish", command=self._on_finish,
+                             bg="#28a745", fg="white", font=("Arial", 14, "bold"),
+                             padx=40, pady=12)
+        finish_btn.pack()
+        
+        # Focus on the finish button
+        finish_btn.focus_set()
+        
+        # Allow Enter key to close
+        self.root.bind('<Return>', lambda event: self._on_finish())
+    
+    def _on_finish(self):
+        """Handle finish button click"""
+        self.root.destroy()
+    
+    def show_failure_message(self):
+        """Show failure message when access is denied after retries"""
+        self.clear_content()
+        self.root.title("Property Search - Connection Failed")
+        self.root.geometry("500x600")
+        
+        # Error icon/title
+        error_label = tk.Label(self.main_frame, text="❌ Connection Failed", 
+                              font=("Arial", 16, "bold"), fg="#dc3545", pady=20)
+        error_label.pack()
+        
+        # Main message
+        message_label = tk.Label(self.main_frame, 
+                                text="Unable to access LoopNet.ca after multiple attempts.\nThe website may be blocking access or temporarily unavailable.", 
+                                font=("Arial", 12), pady=20, justify="center")
+        message_label.pack()
+        
+        # Instructions
+        instructions = tk.Label(self.main_frame, 
+                               text="Please try the following:\n\n" +
+                               "• Wait a few minutes and run the application again\n" +
+                               "• Check your internet connection\n" +
+                               "• Try using a VPN if available\n" +
+                               "• Contact support if the problem persists",
+                               font=("Arial", 11), pady=20, justify="left")
+        instructions.pack()
+        
+        # Close button
+        button_frame = tk.Frame(self.main_frame)
+        button_frame.pack(pady=30)
+        
+        close_btn = tk.Button(button_frame, text="Close Application", command=self._on_close_app,
+                             bg="#dc3545", fg="white", font=("Arial", 12, "bold"),
+                             padx=30, pady=10)
+        close_btn.pack()
+    
+    def _on_close_app(self):
+        """Handle application close from failure screen"""
+        import sys
+        self.root.destroy()
+        sys.exit(0)
+    
     def _animate_dots(self):
         """Animate loading dots"""
         current_text = self.dots_label.cget("text")
@@ -598,6 +682,18 @@ def log_message(message):
     """Log a message to the GUI log section"""
     gui = get_gui_instance()
     gui.log_message(message)
+
+def show_failure_screen():
+    """Show failure screen when connection fails after retries"""
+    gui = get_gui_instance()
+    gui.show_failure_message()
+    gui.root.mainloop()  # Keep GUI open until user closes
+
+def show_completion_screen():
+    """Show completion screen with finish button"""
+    gui = get_gui_instance()
+    gui.show_completion_message()
+    gui.root.mainloop()  # Keep GUI open until user clicks finish
 
 def close_gui():
     """Close the persistent GUI window"""

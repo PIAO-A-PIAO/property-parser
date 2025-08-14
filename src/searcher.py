@@ -1,16 +1,56 @@
 import time
 import random
-from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_price_input_dialog, show_space_input_dialog, show_loading_message, log_message, close_gui
+from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_price_input_dialog, show_space_input_dialog, show_loading_message, log_message, show_failure_screen, close_gui
 
 def select_autocomplete_option(context):
         page = context.new_page()
-        page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded")
         
-        # Simulate manual refresh with F5
-        time.sleep(random.uniform(0.5, 1))
-        page.evaluate("window.location.reload(true)")
-        page.wait_for_load_state("domcontentloaded")        
-        time.sleep(random.uniform(0.5, 1))
+        # Retry logic for accessing loopnet.ca
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                show_loading_message(f"Connecting to LoopNet.ca (Attempt {attempt + 1}/{max_retries})...")
+                log_message(f"🔄 Attempt {attempt + 1} to access LoopNet.ca")
+                
+                page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded", timeout=30000)
+                
+                # Check for access denied or blocked content
+                page_content = page.content()
+                if "access denied" in page_content.lower() or "blocked" in page_content.lower() or "403" in page_content:
+                    log_message(f"⚠️ Access denied detected on attempt {attempt + 1}")
+                    if attempt < max_retries - 1:
+                        log_message("🔄 Refreshing page and retrying...")
+                        # Simulate manual refresh with F5
+                        time.sleep(random.uniform(2, 4))
+                        page.evaluate("window.location.reload(true)")
+                        page.wait_for_load_state("domcontentloaded")
+                        time.sleep(random.uniform(1, 2))
+                        continue
+                    else:
+                        # Final attempt failed
+                        log_message("❌ Access denied after all retry attempts")
+                        show_failure_screen()
+                        return None
+                
+                # Success - page loaded properly
+                log_message("✅ Successfully connected to LoopNet.ca")
+                
+                # Simulate manual refresh for good measure
+                time.sleep(random.uniform(0.5, 1))
+                page.evaluate("window.location.reload(true)")
+                page.wait_for_load_state("domcontentloaded")        
+                time.sleep(random.uniform(0.5, 1))
+                break
+                
+            except Exception as e:
+                log_message(f"⚠️ Connection attempt {attempt + 1} failed: {str(e)}")
+                if attempt < max_retries - 1:
+                    log_message(f"🔄 Retrying in a few seconds...")
+                    time.sleep(random.uniform(3, 6))
+                else:
+                    log_message("❌ Failed to connect after all attempts")
+                    show_failure_screen()
+                    return None
 
         #####################
         ### 1. SALE TYPE ###
@@ -92,7 +132,9 @@ def select_autocomplete_option(context):
             context.close()
             return None
             
-        log_message(f"🗺️ Using location keyword: {keyword}")
+        log_message(f"🔎Using location keyword: {keyword}")
+        show_loading_message(f"Waiting for location suggestions...")
+
         location_input = page.locator("input[name='geography']:visible")
         location_input.click()
         location_input.type(keyword, delay=100)
@@ -153,7 +195,8 @@ def select_autocomplete_option(context):
         else:  # For Sale
             dropdown_selector = "div.search-bar-for-sale-filters div.drop-down.sale-price.custom"
             form_name = "frmSearchBarPriceRange"
-            
+        show_loading_message(f"Fetching price range filter options...")
+
         # Click the dropdown button to make the form visible
         dropdown_button = page.locator(dropdown_selector)
         try:
@@ -199,7 +242,8 @@ def select_autocomplete_option(context):
                 
                 # Show price input GUI with the selected unit
                 unit_label = pill_options[selected_price]['text']
-                price_input = show_price_input_dialog(unit_label)
+                unit_with_currency = f"CAD/{unit_label}"
+                price_input = show_price_input_dialog(unit_with_currency)
                 
                 if price_input is None:
                     log_message("❌ Price input cancelled by user")
@@ -317,7 +361,7 @@ def select_autocomplete_option(context):
 
         page.close()
         
-        # Close the GUI window after all selections are complete
-        close_gui()
+        # Keep GUI open for web parsing phase - don't close yet
+        log_message("🔄 Search setup complete, ready for data collection")
         
         return final_url
