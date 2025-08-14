@@ -12,5 +12,10 @@ On Error Resume Next
 objShell.Run "pythonw src/update.py", 0, True
 On Error Goto 0
 
-' Now run the main application (hide console window)
-objShell.Run "pythonw src/main.py", 0, False
+' Now run the main application (hide console window, wait for completion)
+objShell.Run "pythonw src/main.py", 0, True
+
+' Finally, run cleanup silently (hidden window, wait for completion)
+On Error Resume Next
+objShell.Run "pythonw src/cleanup.py", 0, True
+On Error Goto 0
