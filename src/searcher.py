@@ -1,7 +1,7 @@
 import time
 import random
 from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_space_input_dialog, show_loading_message, log_message, show_failure_screen, close_gui
-
+import asyncio
 class NavigationState:
     def __init__(self):
         self.step_stack = []
@@ -41,52 +41,46 @@ class NavigationState:
     def get_previous_step(self):
         return self.step_stack[-2] if len(self.step_stack) > 1 else None
 
-def select_autocomplete_option(context):
-    page = context.new_page()
+async def select_autocomplete_option(context):
+    page = await context.new_page()
     nav_state = NavigationState()
-    
-    # Initialize browser session (existing code)
     max_retries = 3
+
     for attempt in range(max_retries):
         try:
             show_loading_message(f"Connecting to LoopNet.ca (Attempt {attempt + 1}/{max_retries})...")
             log_message(f"🔄 Attempt {attempt + 1} to access LoopNet.ca")
-            
-            page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded", timeout=30000)
-            
-            # Check for access denied or blocked content
-            page_content = page.content()
+
+            await page.goto("https://www.loopnet.ca/", wait_until="domcontentloaded", timeout=30000)
+            page_content = await page.content()
+
             if "access denied" in page_content.lower() or "blocked" in page_content.lower() or "403" in page_content:
                 log_message(f"⚠️ Access denied detected on attempt {attempt + 1}")
                 if attempt < max_retries - 1:
                     log_message("🔄 Refreshing page and retrying...")
-                    time.sleep(random.uniform(2, 4))
-                    page.evaluate("window.location.reload(true)")
-                    page.wait_for_load_state("domcontentloaded")
-                    time.sleep(random.uniform(1, 2))
+                    await asyncio.sleep(random.uniform(2, 4))
                     continue
                 else:
                     log_message("❌ Access denied after all retry attempts")
                     show_failure_screen()
                     return None
-            
-            # Success - page loaded properly
+
             log_message("✅ Successfully connected to LoopNet.ca")
-            time.sleep(random.uniform(0.5, 1))
-            page.evaluate("window.location.reload(true)")
-            page.wait_for_load_state("domcontentloaded")        
-            time.sleep(random.uniform(0.5, 1))
+            await asyncio.sleep(random.uniform(0.5, 1))
+            await page.reload(wait_until="domcontentloaded")
+            await asyncio.sleep(random.uniform(0.5, 1))
             break
-            
+
         except Exception as e:
             log_message(f"⚠️ Connection attempt {attempt + 1} failed: {str(e)}")
             if attempt < max_retries - 1:
-                log_message(f"🔄 Retrying in a few seconds...")
-                time.sleep(random.uniform(3, 6))
+                log_message("🔄 Retrying in a few seconds...")
+                await asyncio.sleep(random.uniform(3, 6))
             else:
                 log_message("❌ Failed to connect after all attempts")
                 show_failure_screen()
                 return None
+
     
     # Main navigation flow
     current_step = 'sale_type'
