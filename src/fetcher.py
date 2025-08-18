@@ -1,14 +1,15 @@
+import asyncio
 from parser import parse_articles_from_string, extract_next_page_url, append_to_csv
 from gui import log_message
 import time
 from datetime import datetime
 
-def fetch_all_pages(url, context, output_csv=None):
+async def fetch_all_pages(url, context, output_csv=None):
     if output_csv is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_csv = f"parsed_listings_{timestamp}.csv"
     
-    page = context.new_page()
+    page = await context.new_page()
 
     current_url = url
     page_num = 1
@@ -21,9 +22,9 @@ def fetch_all_pages(url, context, output_csv=None):
 
         while attempt < MAX_RETRIES and not response_html:
             try:
-                response = page.goto(current_url, wait_until="domcontentloaded", timeout=30000)
+                response = await page.goto(current_url, wait_until="domcontentloaded", timeout=30000)
                 if response and response.status == 200:
-                    response_html = response.text()
+                    response_html = await response.text()
                 else:
                     log_message(f"⚠️ Got status {response.status} on attempt {attempt + 1}")
             except Exception as e:
@@ -31,7 +32,7 @@ def fetch_all_pages(url, context, output_csv=None):
 
             if not response_html:
                 attempt += 1
-                time.sleep(2)
+                await asyncio.sleep(2)
 
         if not response_html:
             log_message("❌ Failed to capture HTML response after retries. Exiting.")
@@ -57,4 +58,4 @@ def fetch_all_pages(url, context, output_csv=None):
             log_message("🔚 No next page found. Done.")
             break
     
-    page.close()
+    await page.close()

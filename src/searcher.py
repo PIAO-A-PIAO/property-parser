@@ -2,6 +2,8 @@ import time
 import random
 from gui import show_sale_type_dialog, show_property_type_dialog, show_location_input_dialog, show_location_options_dialog, show_price_range_dialog, show_space_input_dialog, show_loading_message, log_message, show_failure_screen, close_gui
 import asyncio
+from playwright.async_api import TimeoutError
+
 class NavigationState:
     def __init__(self):
         self.step_stack = []
@@ -67,8 +69,6 @@ async def select_autocomplete_option(context):
 
             log_message("✅ Successfully connected to LoopNet.ca")
             await asyncio.sleep(random.uniform(0.5, 1))
-            await page.reload(wait_until="domcontentloaded")
-            await asyncio.sleep(random.uniform(0.5, 1))
             break
 
         except Exception as e:
@@ -87,7 +87,7 @@ async def select_autocomplete_option(context):
     
     while current_step:
         if current_step == 'sale_type':
-            result = handle_sale_type_step(page, nav_state)
+            result = await handle_sale_type_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -96,7 +96,7 @@ async def select_autocomplete_option(context):
                 current_step = 'property_type'
                 
         elif current_step == 'property_type':
-            result = handle_property_type_step(page, nav_state)
+            result = await handle_property_type_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -107,7 +107,7 @@ async def select_autocomplete_option(context):
                 current_step = 'location_input'
                 
         elif current_step == 'location_input':
-            result = handle_location_input_step(page, nav_state)
+            result = await handle_location_input_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -117,7 +117,7 @@ async def select_autocomplete_option(context):
                 current_step = 'location_options'
                 
         elif current_step == 'location_options':
-            result = handle_location_options_step(page, nav_state)
+            result = await handle_location_options_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -127,7 +127,7 @@ async def select_autocomplete_option(context):
                 current_step = 'price_range'
                 
         elif current_step == 'price_range':
-            result = handle_price_range_step(page, nav_state)
+            result = await handle_price_range_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -139,7 +139,7 @@ async def select_autocomplete_option(context):
                 current_step = 'space_input'
                 
         elif current_step == 'space_input':
-            result = handle_space_input_step(page, nav_state)
+            result = await handle_space_input_step(page, nav_state)
             if result == 'cancelled':
                 return None
             elif result == 'back':
@@ -152,57 +152,60 @@ async def select_autocomplete_option(context):
     log_message(f"🌐 Redirected to: {final_url}")
     
     show_loading_message("Setup complete! Preparing search results...")
-    time.sleep(2)
+    await asyncio.sleep(2)
     
-    page.close()
+    await page.close()
     log_message("🔄 Search setup complete, ready for data collection")
     
     return final_url
 
-def handle_sale_type_step(page, nav_state):
+async def handle_sale_type_step(page, nav_state):
     sale_type_options = {
         0: {"label": "For Lease", "selector": "li.long-name:has-text('For Lease')"},
         1: {"label": "For Sale", "selector": "li.long-name[ng-click=\"selectSearchType('forSale')\"]"},
     }
     
     try:
-        page.wait_for_selector("li.long-name", timeout=10000)
-    except:
+        await page.wait_for_selector("li.long-name", timeout=10000)
+    except TimeoutError:
         log_message("⚠️ Page elements may not be fully loaded")
     
     nav_state.push_step('sale_type')
     result = show_sale_type_dialog(sale_type_options)
-    
     if result is None:
         return 'cancelled'
     elif isinstance(result, dict) and result.get('action') == 'back':
         return 'back'
     
-    # Execute the selection
     locator = page.locator(sale_type_options[result]["selector"])
-    locator.wait_for(state="visible", timeout=5000)
-    locator.click()
+    await locator.wait_for(state="visible", timeout=5000)
+    await locator.click()
     log_message(f"✅ Selected: {sale_type_options[result]['label']}")
     
     nav_state.data['sale_type_choice'] = result
-    time.sleep(random.uniform(0.5, 1))
+    await asyncio.sleep(random.uniform(0.5, 1))  # Use asyncio.sleep here
+    
     return 'continue'
 
-def handle_property_type_step(page, nav_state):
-    page.wait_for_selector("div.property-type-icons div.property-type", timeout=10000)
-    
+async def handle_property_type_step(page, nav_state):
+    try:
+        await page.wait_for_selector("div.property-type-icons div.property-type", timeout=10000)
+        log_message("✅ Selector found, continuing...")
+    except Exception as e:
+        log_message(f"❌ Failed to find property type selector: {e}")
+        return 'cancelled'
     prop_types_section = page.locator("div.property-type-icons")
     prop_type_tiles = prop_types_section.locator("div.property-type")
     
-    prop_count = prop_type_tiles.count()
+    prop_count = await prop_type_tiles.count()
     prop_options = {}
     
     for i in range(prop_count):
         tile = prop_type_tiles.nth(i)
         try:
-            label = tile.locator("p.bold").inner_text().strip()
+            label = (await tile.locator("p.bold").inner_text()).strip()
             if not label:
-                label = tile.inner_text().strip()
+                label = (await tile.inner_text()).strip()
             prop_options[i] = {"text": label, "element": tile}
         except Exception as e:
             log_message(f"⚠️ Error reading property type {i}: {e}")
@@ -219,15 +222,15 @@ def handle_property_type_step(page, nav_state):
         return 'back'
     
     # Execute the selection
-    prop_options[result]["element"].click()
+    await prop_options[result]["element"].click()
     log_message(f"✅ Selected Property Type: {prop_options[result]['text']}")
     
     nav_state.data['selected_prop'] = result
     nav_state.data['prop_options'] = prop_options
-    time.sleep(random.uniform(0.5, 1))
+    await asyncio.sleep(random.uniform(0.5, 1))
     return 'continue'
 
-def handle_location_input_step(page, nav_state):
+async def handle_location_input_step(page, nav_state):
     nav_state.push_step('location_input')
     result = show_location_input_dialog()
     
@@ -241,34 +244,39 @@ def handle_location_input_step(page, nav_state):
     log_message(f"🔎Using location keyword: {result}")
     return 'continue'
 
-def handle_location_options_step(page, nav_state):
+async def handle_location_options_step(page, nav_state):
     keyword = nav_state.data['keyword']
     
     show_loading_message("Waiting for location suggestions...")
     
     # Clear the input field first and then type the new keyword
     location_input = page.locator("input[name='geography']:visible")
-    location_input.click()
-    location_input.fill('')  # Clear existing content
-    time.sleep(0.5)  # Small delay to ensure clearing
-    location_input.type(keyword, delay=100)
+    await location_input.click()
+    await location_input.fill('')  # Clear existing content
+    await asyncio.sleep(0.5)  # Small delay to ensure clearing
+    await location_input.type(keyword, delay=100)
     
     popup = page.locator("ul.typeahead-popup")
     try:
-        popup.wait_for(state="visible", timeout=10000)
+        await popup.wait_for(state="visible", timeout=10000)
     except:
         log_message("❌ Autocomplete popup did not appear.")
         return 'cancelled'
     
     options = {}
     li_elements = popup.locator("li[role='option']")
-    count = li_elements.count()
-    
+    count = await li_elements.count()
+    print(count)
     for i in range(count):
         li = li_elements.nth(i)
         a = li.locator("a")
         try:
-            text = a.inner_text().strip()
+            raw_html = await li.inner_html()
+            print(f"🔹 [li #{i}] Raw HTML: {raw_html}")
+
+            text = (await a.inner_text()).strip()  # await here!
+            print(f"🔹 [li #{i}] Inner Text: {text}")
+
             options[i] = {"text": text, "element": li}
         except Exception as e:
             log_message(f"⚠️ Error reading item {i}: {e}")
@@ -286,22 +294,23 @@ def handle_location_options_step(page, nav_state):
     
     # Execute the selection
     previous_url = page.url
-    options[result]["element"].click()
+    await options[result]["element"].click()
     log_message(f"✅ Selected: {options[result]['text']}")
+    show_loading_message("Fetching price range filter options...")
     
     # Wait for URL to change
     try:
-        page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+        await page.wait_for_url(lambda url: url != previous_url, timeout=10000)
     except Exception:
         log_message("⚠️ URL did not change after location selection, waiting for load event instead.")
-        page.wait_for_load_state("load")
+        await page.wait_for_load_state("load")
     
     nav_state.data['selected_location'] = result
     nav_state.data['location_options'] = options
-    time.sleep(random.uniform(0.5, 1))
+    await asyncio.sleep(random.uniform(0.5, 1))
     return 'continue'
 
-def handle_price_range_step(page, nav_state):
+async def handle_price_range_step(page, nav_state):
     sale_type_choice = nav_state.data['sale_type_choice']
     
     # Setup price form based on sale type
@@ -312,22 +321,21 @@ def handle_price_range_step(page, nav_state):
         dropdown_selector = "div.search-bar-for-sale-filters div.drop-down.sale-price.custom"
         form_name = "frmSearchBarPriceRange"
     
-    show_loading_message("Fetching price range filter options...")
     
     dropdown_button = page.locator(dropdown_selector)
     try:
-        dropdown_button.wait_for(state="visible", timeout=10000)
-        dropdown_button.click()
+        await dropdown_button.wait_for(state="visible", timeout=10000)
+        await dropdown_button.click()
     except Exception as e:
         log_message(f"⚠️ Could not click dropdown button: {e}")
         return 'cancelled'
     
     price_form = page.locator(f'form[name="{form_name}"]')
     try:
-        price_form.wait_for(state="visible", timeout=10000)
+        await price_form.wait_for(state="visible", timeout=10000)
         
         pills = price_form.locator('div.pill:not(.ng-hide)')
-        pill_count = pills.count()
+        pill_count = await pills.count()
         
         log_message(f"🪙 Found {pill_count} price range options")
         pill_options = {}
@@ -336,7 +344,7 @@ def handle_price_range_step(page, nav_state):
             pill = pills.nth(i)
             try:
                 label_element = pill.locator('label')
-                label_text = label_element.inner_text().strip()
+                label_text = (await label_element.inner_text()).strip()
                 pill_options[i] = {"text": label_text, "element": label_element}
             except Exception as e:
                 log_message(f"⚠️ Error reading pill {i}: {e}")
@@ -362,11 +370,11 @@ def handle_price_range_step(page, nav_state):
             
             # Step 1: Execute the price type selection first
             log_message(f"🎯 Selecting price range type: {pill_options[price_type_idx]['text']}")
-            pill_options[price_type_idx]["element"].click()
+            await pill_options[price_type_idx]["element"].click()
             log_message(f"✅ Clicked price range type: {pill_options[price_type_idx]['text']}")
             
             # Small delay to let the form update
-            time.sleep(random.uniform(0.5, 1))
+            await asyncio.sleep(random.uniform(0.5, 1))
             
             # Step 2: Enter min/max values if provided
             if min_value or max_value:
@@ -375,21 +383,21 @@ def handle_price_range_step(page, nav_state):
                 try:
                     # Find the price input fields after clicking the price type
                     text_inputs = price_form.locator('input[type="text"]')
-                    input_count = text_inputs.count()
+                    input_count = await text_inputs.count()
                     
                     if input_count >= 2:
                         # Enter minimum value
                         if min_value:
                             min_input = text_inputs.first
-                            min_input.clear()
-                            min_input.type(min_value)
+                            await min_input.clear()
+                            await min_input.type(min_value)
                             log_message(f"✅ Entered minimum price: {min_value}")
                             
                         # Enter maximum value  
                         if max_value:
                             max_input = text_inputs.nth(1)
-                            max_input.clear()
-                            max_input.type(max_value)
+                            await max_input.clear()
+                            await max_input.type(max_value)
                             log_message(f"✅ Entered maximum price: {max_value}")
                             
                         show_loading_message("Applying price filter...")
@@ -397,13 +405,13 @@ def handle_price_range_step(page, nav_state):
                         # Wait for page to redirect after entering values
                         previous_url = page.url
                         try:
-                            page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                            await page.wait_for_url(lambda url: url != previous_url, timeout=10000)
                             log_message("✅ Page redirected after price filter application")
                         except Exception:
                             log_message("⚠️ URL did not change after filter, waiting for load event instead.")
-                            page.wait_for_load_state("load")
+                            await page.wait_for_load_state("load")
                         
-                        time.sleep(random.uniform(0.5, 1))
+                        await asyncio.sleep(random.uniform(0.5, 1))
                         
                     else:
                         log_message(f"⚠️ Expected 2 text inputs, found {input_count}")
@@ -433,7 +441,7 @@ def handle_price_range_step(page, nav_state):
         return 'cancelled'
 
 
-def handle_space_input_step(page, nav_state):
+async def handle_space_input_step(page, nav_state):
     sale_type_choice = nav_state.data['sale_type_choice']
     
     # Setup space form based on sale type
@@ -446,8 +454,8 @@ def handle_space_input_step(page, nav_state):
     
     space_dropdown = page.locator(space_dropdown_selector)
     try:
-        space_dropdown.wait_for(state="visible", timeout=10000)
-        space_dropdown.click()
+        await space_dropdown.wait_for(state="visible", timeout=10000)
+        await space_dropdown.click()
         
         nav_state.push_step('space_input')
         result = show_space_input_dialog()
@@ -470,15 +478,15 @@ def handle_space_input_step(page, nav_state):
             space_form.wait_for(state="attached", timeout=5000)
             
             sf_inputs = space_form.locator('input[type="text"][placeholder*="SF"]')
-            sf_count = sf_inputs.count()
+            sf_count = await sf_inputs.count()
             
             if min_space and sf_count > 0:
                 min_input = sf_inputs.first
-                min_input.fill(min_space, force=True)
+                await min_input.fill(min_space, force=True)
                 
             if max_space and sf_count > 1:
                 max_input = sf_inputs.nth(1)
-                max_input.fill(max_space, force=True)
+                await max_input.fill(max_space, force=True)
             elif max_space and sf_count == 1:
                 log_message("⚠️ Only found one SF input, cannot set maximum")
             
@@ -486,12 +494,12 @@ def handle_space_input_step(page, nav_state):
                 show_loading_message("Applying space filter...")
                 previous_url = page.url
                 try:
-                    page.wait_for_url(lambda url: url != previous_url, timeout=10000)
+                    await page.wait_for_url(lambda url: url != previous_url, timeout=10000)
                 except Exception:
                     log_message("⚠️ URL did not change after space filter selection, waiting for load event instead.")
-                    page.wait_for_load_state("load")
+                    await page.wait_for_load_state("load")
                 
-                time.sleep(random.uniform(0.5, 1))
+                await asyncio.sleep(random.uniform(0.5, 1))
                 
         except Exception as e:
             log_message(f"⚠️ Error with space form: {e}")
