@@ -15,3 +15,4 @@
 3.0.3: automatic cleanup
 3.0.4: hide screen...
 3.0.5: hide back button on first screen
+3.1.0: use persistent context
