@@ -63,7 +63,7 @@ async def main():
             else:
                 # Chromium-based browsers, launch persistent context
                 context = await p.chromium.launch_persistent_context(
-                    user_data_dir="./loopnet_profile",
+                    user_data_dir="./src/loopnet_profile",
                     executable_path=browser_executable,
                     headless=False,
                     args=["--window-position=-10000,-10000"],
@@ -75,7 +75,7 @@ async def main():
         else:
             log_message("⬇️ Launching default Chromium from Playwright...")
             context = await p.chromium.launch_persistent_context(
-                user_data_dir="./loopnet_profile",
+                user_data_dir="./src/loopnet_profile",
                 headless=False,
                 args=["--window-position=-10000,-10000"],
                 viewport={"width": 1280, "height": 720},

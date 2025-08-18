@@ -33,6 +33,19 @@ def cleanup_playwright_and_pycache(project_root=None):
     else:
         print("⚠️ Could not find LOCALAPPDATA environment variable to locate Playwright folder.")
 
+    # 3) Remove local persistent browser profile directory './loopnet_profile'
+    loopnet_profile_dir = project_root / "loopnet_profile"
+    print(loopnet_profile_dir)
+    if loopnet_profile_dir.exists():
+        try:
+            print(f"🧹 Deleting persistent browser profile folder at {loopnet_profile_dir} ...")
+            shutil.rmtree(loopnet_profile_dir)
+            print("Persistent browser profile deleted.")
+        except Exception as e:
+            print(f"⚠️ Failed to delete persistent browser profile folder: {e}")
+    else:
+        print(f"No persistent browser profile folder found at {loopnet_profile_dir}")
+
 # Example usage
 if __name__ == "__main__":
     cleanup_playwright_and_pycache()
